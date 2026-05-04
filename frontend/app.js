@@ -4,6 +4,8 @@
 
 window.API = "/api";
 const API = window.API;
+window.MINIO_URL = "http://localhost:9000/sideboard";  // MinIO Base URL
+const MINIO_URL = window.MINIO_URL;
 
 // 1. Globale State für User
 window.currentUser = null;
