@@ -97,7 +97,6 @@ async function addToCart(accessoryId) {
     });
     const data = await res.json();
     if (data.erfolg) {
-      showToast("Zum Warenkorb hinzugefügt");
       updateCartBadge();
       if (typeof window.loadWarenkorb === 'function') window.loadWarenkorb();
     }

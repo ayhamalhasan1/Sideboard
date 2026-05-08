@@ -40,6 +40,9 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     environment:
       DB_HOST: mysql
       DB_USER: root
@@ -63,6 +66,8 @@ services:
     restart: always
     ports:
       - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
     depends_on:
       - backend
 
