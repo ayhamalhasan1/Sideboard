@@ -63,6 +63,23 @@ router.post("/cart", async (req, res) => {
   } catch (err) { res.status(500).json({ fehler: "Fehler beim Hinzufügen" }); }
 });
 
+router.put("/cart/:id", async (req, res) => {
+  const db = req.app.locals.db;
+  try {
+    let { field, value } = getAuthQueryDetails(req);
+    const { menge } = req.body;
+    if (menge < 1) return res.status(400).json({ fehler: "Menge muss mindestens 1 sein" });
+    
+    if (req.params.id === "sideboard") {
+      // Sideboard quantity cannot be changed, it's 1 per configuration
+      return res.json({ erfolg: true });
+    }
+    
+    await db.query(`UPDATE cart_items SET menge = ? WHERE id = ? AND ${field} = ?`, [menge, req.params.id, value]);
+    res.json({ erfolg: true });
+  } catch (err) { res.status(500).json({ fehler: "Fehler beim Aktualisieren der Menge" }); }
+});
+
 router.delete("/cart/:id", async (req, res) => {
   const db = req.app.locals.db;
   let { field, value } = getAuthQueryDetails(req);
