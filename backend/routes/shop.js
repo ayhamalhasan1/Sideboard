@@ -6,10 +6,7 @@ function getAuthQueryDetails(req) {
   return { field: "session_id", value: req.sessionID };
 }
 
-function requireAuth(req, res, next) {
-  if (!req.session.userId) return res.status(401).json({ fehler: "Nicht eingeloggt" });
-  next();
-}
+
 
 // ---------------- ZUBEHÖR ----------------
 
@@ -86,7 +83,7 @@ router.delete("/cart", async (req, res) => {
 
 // ---------------- CHECKOUT & ORDERS ----------------
 
-router.post("/checkout", requireAuth, async (req, res) => {
+router.post("/checkout", async (req, res) => {
   const db = req.app.locals.db;
   try {
     // 1. Get Cart
@@ -123,7 +120,7 @@ router.post("/checkout", requireAuth, async (req, res) => {
     // 3. Create Order
     const [orderResult] = await db.query(
       "INSERT INTO orders (user_id, order_number, total_amount, shipping_address, payment_method) VALUES (?, ?, ?, ?, ?)",
-      [req.session.userId, orderNumber, total, JSON.stringify(shipping_address || {}), "Rechnung_Mock"]
+      [null, orderNumber, total, JSON.stringify(shipping_address || {}), "Rechnung_Mock"]
     );
     const orderId = orderResult.insertId;
 
@@ -151,10 +148,9 @@ router.post("/checkout", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/orders", requireAuth, async (req, res) => {
+router.get("/orders", async (req, res) => {
   const db = req.app.locals.db;
-  const [orders] = await db.query("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC", [req.session.userId]);
-  res.json(orders);
+  res.json([]);
 });
 
 module.exports = router;

@@ -92,18 +92,14 @@ async function initSession(redisClient) {
 // ============================================
 // Routen einbinden
 // ============================================
-const authRoutes = require("./routes/auth");
 const configRoutes = require("./routes/config");
 const shopRoutes = require("./routes/shop");
-const userRoutes = require("./routes/user");
 const aiRoutes = require("./routes/ai");
 const reviewsRoutes = require("./routes/reviews");
 
 function registerRoutes() {
-  app.use("/api/auth", authRoutes);
   app.use("/api/config", configRoutes);
   app.use("/api/shop", shopRoutes);
-  app.use("/api/user", userRoutes);
   app.use("/api/ai", aiRoutes);
   app.use("/api/reviews", reviewsRoutes);
 

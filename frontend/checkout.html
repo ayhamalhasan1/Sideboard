@@ -104,12 +104,6 @@
   <script>
     document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
-      if (!window.currentUser) {
-        showToast("Bitte logge dich ein, um fortzufahren", true);
-        showLogin();
-        return;
-      }
 
       try {
         const btn = e.target.querySelector('button');
@@ -136,7 +130,7 @@
         if (res.ok) {
           showToast(`Bestellung #${data.order_number} erfolgreich!`);
           setTimeout(() => {
-            window.location.href = "profil.html";
+            window.location.href = "index.html";
           }, 2000);
         } else {
           showToast(data.fehler || "Es gab ein Problem.", true);
@@ -148,13 +142,7 @@
       }
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
-      setTimeout(() => {
-        if (!window.currentUser) {
-          showToast("Bitte logge dich vor der Bestellung ein.");
-        }
-      }, 500);
-    });
+
   </script>
 </body>
 </html>

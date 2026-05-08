@@ -5,55 +5,8 @@
 window.API = "/api";
 const API = window.API;
 
-// 1. Globale State für User
-window.currentUser = null;
-
-// 2. Auth-Modals ins HTML injizieren
-function injectAuthModals() {
-  const modalsHTML = `
-    <!-- Overlay -->
-    <div id="authOverlay" class="auth-overlay" style="display:none;" onclick="closeAuthModals()"></div>
-
-    <!-- Login Modal -->
-    <div id="loginModal" class="auth-modal" style="display:none;">
-      <h2>Login</h2>
-      <input type="email" id="loginEmail" placeholder="E-Mail">
-      <input type="password" id="loginPass" placeholder="Passwort">
-      <button class="btn-primary" onclick="doLogin()">Einloggen</button>
-      <p style="margin-top:1rem; font-size:0.9rem;">
-        Noch kein Konto? <a href="#" onclick="showRegister()">Jetzt registrieren</a>
-      </p>
-    </div>
-
-    <!-- Register Modal -->
-    <div id="registerModal" class="auth-modal" style="display:none;">
-      <h2>Registrieren</h2>
-      <input type="text" id="regUser" placeholder="Benutzername">
-      <input type="email" id="regEmail" placeholder="E-Mail">
-      <input type="password" id="regPass" placeholder="Passwort">
-      <button class="btn-primary" onclick="doRegister()">Konto erstellen</button>
-      <p style="margin-top:1rem; font-size:0.9rem;">
-        Bereits ein Konto? <a href="#" onclick="showLogin()">Jetzt einloggen</a>
-      </p>
-    </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend', modalsHTML);
-}
-
 // 3. Layout Injizieren
 async function injectLayout() {
-  // Check auth status first
-  try {
-    const res = await fetch(`${API}/auth/me`, { credentials: "include" });
-    if (res.ok) {
-      const data = await res.json();
-      window.currentUser = data.profile;
-    }
-  } catch(err) {}
-
-  const authLink = window.currentUser 
-    ? `<a href="profil.html" class="nav-link" style="color:var(--ikea-blue);">👤 ${window.currentUser.username}</a>`
-    : `<a href="#" onclick="showLogin(); return false;" class="nav-link">Login</a>`;
 
   const navHTML = `
     <nav class="navbar">
@@ -65,7 +18,6 @@ async function injectLayout() {
         <a href="konfigurator.html" class="nav-link">Konfigurator</a>
         <a href="shop.html" class="nav-link">Zubehör</a>
         <a href="berater.html" class="nav-link">KI Berater</a>
-        ${authLink}
         <a href="warenkorb.html" class="cart-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="9" cy="21" r="1"></circle>
@@ -94,71 +46,10 @@ async function injectLayout() {
     }
   });
 
-  injectAuthModals();
   updateCartBadge();
 }
 
-// 4. Modal CSS/Logic
-function showLogin() {
-  document.getElementById('authOverlay').style.display = 'block';
-  document.getElementById('registerModal').style.display = 'none';
-  document.getElementById('loginModal').style.display = 'block';
-}
 
-function showRegister() {
-  document.getElementById('authOverlay').style.display = 'block';
-  document.getElementById('loginModal').style.display = 'none';
-  document.getElementById('registerModal').style.display = 'block';
-}
-
-function closeAuthModals() {
-  document.getElementById('authOverlay').style.display = 'none';
-  document.getElementById('loginModal').style.display = 'none';
-  document.getElementById('registerModal').style.display = 'none';
-}
-
-// 5. Auth API Logic
-async function doLogin() {
-  const email = document.getElementById('loginEmail').value;
-  const password = document.getElementById('loginPass').value;
-  try {
-    const res = await fetch(`${API}/auth/login`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      credentials: "include", body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if(res.ok) {
-      showToast("Erfolgreich eingeloggt!");
-      setTimeout(() => location.reload(), 800);
-    } else {
-      showToast(data.fehler, true);
-    }
-  } catch(err) { showToast("Login fehlgeschlagen", true); }
-}
-
-async function doRegister() {
-  const user = document.getElementById('regUser').value;
-  const email = document.getElementById('regEmail').value;
-  const password = document.getElementById('regPass').value;
-  try {
-    const res = await fetch(`${API}/auth/register`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      credentials: "include", body: JSON.stringify({ email, username: user, password })
-    });
-    const data = await res.json();
-    if(res.ok) {
-      showToast("Registrierung erfolgreich!");
-      setTimeout(() => location.reload(), 800);
-    } else {
-      showToast(data.fehler, true);
-    }
-  } catch(err) { showToast("Registrierung fehlgeschlagen", true); }
-}
-
-async function doLogout() {
-  await fetch(`${API}/auth/logout`, { method: "POST", credentials: "include" });
-  location.href = "index.html";
-}
 
 
 // 6. Toast System
