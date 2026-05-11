@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community | Sideboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <div style="margin-bottom: 2rem;">
+      <a href="index.html" style="color: var(--text-muted); text-decoration: none;">&larr; Zurück</a>
+    </div>
+
+    <h1 class="page-title">Community-Entwürfe</h1>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Entdecke kreative Sideboard-Entwürfe von anderen Nutzern</p>
+
+    <div id="communityGrid" class="community-grid">
+      <!-- Entwürfe werden hier geladen -->
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    async function ladeCommunityEntwuerfe() {
+      try {
+        const res = await fetch(`${API}/community`);
+        if (!res.ok) return;
+        const entwuerfe = await res.json();
+        const grid = document.getElementById('communityGrid');
+        grid.innerHTML = '';
+
+        if (entwuerfe.length === 0) {
+          grid.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Noch keine Community-Entwürfe vorhanden.</p>';
+          return;
+        }
+
+        entwuerfe.forEach(entwurf => {
+          const card = document.createElement('div');
+          card.className = 'card community-card';
+          card.innerHTML = `
+            <div class="sideboard-vorschau ${entwurf.farbe} ${entwurf.groesse}" style="margin-bottom: 1rem;">
+              <div class="sideboard-deckel ${entwurf.deckel_offen ? 'offen' : ''}"></div>
+              <div class="sideboard-korpus">
+                <div class="fach"></div><div class="fach"></div>
+                <div class="fach"></div><div class="fach"></div>
+              </div>
+              <div class="sideboard-beine">
+                <div class="bein"></div><div class="bein"></div>
+              </div>
+            </div>
+            <h3>${entwurf.name}</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+              Größe: ${entwurf.groesse} | Farbe: ${entwurf.farbe} | Material: ${entwurf.material}
+            </p>
+            <button class="btn-secondary" onclick="ladeEntwurf(${entwurf.id})">Übernehmen</button>
+          `;
+          grid.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Fehler beim Laden der Community-Entwürfe:', err);
+      }
+    }
+
+    async function ladeEntwurf(id) {
+      try {
+        const res = await fetch(`${API}/community/${id}`);
+        if (!res.ok) return showToast('Entwurf nicht gefunden', true);
+        const entwurf = await res.json();
+        
+        // Entwurf in lokale Konfiguration laden
+        const configRes = await fetch(`${API}/config`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(entwurf)
+        });
+        if (configRes.ok) {
+          showToast('Entwurf übernommen! Gehe zum Konfigurator.');
+          setTimeout(() => window.location.href = 'konfigurator.html', 1000);
+        }
+      } catch (err) {
+        showToast('Fehler beim Laden des Entwurfs', true);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', ladeCommunityEntwuerfe);
+  </script>
+</body>
+</html>

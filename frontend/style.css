@@ -465,9 +465,9 @@ h1.page-title {
 .farb-punkt.eiche { background: #D4B886; }
 
 /* ================================================
-   Shop Grid
+   Shop Grid & Community Grid
    ================================================ */
-.shop-grid {
+.shop-grid, .community-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2.5rem;
@@ -485,7 +485,7 @@ h1.page-title {
   cursor: pointer;
 }
 
-.product-card:hover {
+.product-card:hover, .community-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }

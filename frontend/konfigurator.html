@@ -102,6 +102,9 @@
             <button class="btn-primary" style="width: 100%;" onclick="speichereKonfiguration()">
               Aktive Konfiguration speichern & aktualisieren
             </button>
+            <button class="btn-secondary" style="width: 100%;" onclick="teileCommunity()">
+              Als Community-Entwurf teilen
+            </button>
             <div id="favoritSpeichernDiv" style="display: none; flex-direction: column; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
               <input type="text" id="favoritName" placeholder="Name für neues Sideboard..." style="padding: 0.8rem; border: 2px solid var(--border); border-radius: var(--radius-sm); font-family: inherit;">
               <button class="btn-secondary" style="width: 100%;" onclick="speichereAlsFavorit()">
@@ -218,6 +221,23 @@
         if (res.ok) {
           showToast("Als Profil-Favorit gespeichert!");
           document.getElementById("favoritName").value = "";
+        }
+      } catch(err) { showToast("Fehler", true); }
+    }
+
+    async function teileCommunity() {
+      const name = prompt("Name für den Community-Entwurf:");
+      if (!name) return;
+      try {
+        await speichereKonfiguration(true);
+        const res = await fetch(`${API}/community/share`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          credentials: "include", body: JSON.stringify({ name })
+        });
+        if (res.ok) {
+          showToast("Entwurf in der Community geteilt!");
+        } else {
+          showToast("Fehler beim Teilen", true);
         }
       } catch(err) { showToast("Fehler", true); }
     }
