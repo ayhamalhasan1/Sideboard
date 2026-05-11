@@ -6,10 +6,7 @@ function getAuthQueryDetails(req) {
   return { field: "session_id", value: req.sessionID };
 }
 
-function requireAuth(req, res, next) {
-  if (!req.session.userId) return res.status(401).json({ fehler: "Nicht eingeloggt" });
-  next();
-}
+
 
 // ---------------- ZUBEHÖR ----------------
 
@@ -66,6 +63,23 @@ router.post("/cart", async (req, res) => {
   } catch (err) { res.status(500).json({ fehler: "Fehler beim Hinzufügen" }); }
 });
 
+router.put("/cart/:id", async (req, res) => {
+  const db = req.app.locals.db;
+  try {
+    let { field, value } = getAuthQueryDetails(req);
+    const { menge } = req.body;
+    if (menge < 1) return res.status(400).json({ fehler: "Menge muss mindestens 1 sein" });
+    
+    if (req.params.id === "sideboard") {
+      // Sideboard quantity cannot be changed, it's 1 per configuration
+      return res.json({ erfolg: true });
+    }
+    
+    await db.query(`UPDATE cart_items SET menge = ? WHERE id = ? AND ${field} = ?`, [menge, req.params.id, value]);
+    res.json({ erfolg: true });
+  } catch (err) { res.status(500).json({ fehler: "Fehler beim Aktualisieren der Menge" }); }
+});
+
 router.delete("/cart/:id", async (req, res) => {
   const db = req.app.locals.db;
   let { field, value } = getAuthQueryDetails(req);
@@ -86,7 +100,7 @@ router.delete("/cart", async (req, res) => {
 
 // ---------------- CHECKOUT & ORDERS ----------------
 
-router.post("/checkout", requireAuth, async (req, res) => {
+router.post("/checkout", async (req, res) => {
   const db = req.app.locals.db;
   try {
     // 1. Get Cart
@@ -123,7 +137,7 @@ router.post("/checkout", requireAuth, async (req, res) => {
     // 3. Create Order
     const [orderResult] = await db.query(
       "INSERT INTO orders (user_id, order_number, total_amount, shipping_address, payment_method) VALUES (?, ?, ?, ?, ?)",
-      [req.session.userId, orderNumber, total, JSON.stringify(shipping_address || {}), "Rechnung_Mock"]
+      [null, orderNumber, total, JSON.stringify(shipping_address || {}), "Rechnung_Mock"]
     );
     const orderId = orderResult.insertId;
 
@@ -151,10 +165,9 @@ router.post("/checkout", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/orders", requireAuth, async (req, res) => {
+router.get("/orders", async (req, res) => {
   const db = req.app.locals.db;
-  const [orders] = await db.query("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC", [req.session.userId]);
-  res.json(orders);
+  res.json([]);
 });
 
 module.exports = router;
