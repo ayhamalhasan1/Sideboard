@@ -38,12 +38,12 @@ router.post("/", async (req, res) => {
     const [existing] = await db.query(`SELECT id FROM configurations WHERE ${field} = ?`, [value]);
     if (existing.length > 0) {
       await db.query(
-        `UPDATE configurations SET farbe=?, groesse=?, deckel_offen=?, material=?, finish=?, width_cm=?, height_cm=?, depth_cm=?, is_public=FALSE WHERE ${field}=?`,
+        `UPDATE configurations SET farbe=?, groesse=?, deckel_offen=?, material=?, finish=?, width_cm=?, height_cm=?, depth_cm=? WHERE ${field}=?`,
         [farbe, groesse, deckel_offen, material || "Holz", finish || "matt", width_cm || 160, height_cm || 80, depth_cm || 40, value]
       );
     } else {
       await db.query(
-        `INSERT INTO configurations (session_id, user_id, farbe, groesse, deckel_offen, material, finish, width_cm, height_cm, depth_cm, is_public) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE)`,
+        `INSERT INTO configurations (session_id, user_id, farbe, groesse, deckel_offen, material, finish, width_cm, height_cm, depth_cm) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [req.sessionID, req.session.userId || null, farbe, groesse, deckel_offen, material || "Holz", finish || "matt", width_cm || 160, height_cm || 80, depth_cm || 40]
       );
     }

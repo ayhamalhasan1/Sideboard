@@ -42,14 +42,33 @@ CREATE TABLE IF NOT EXISTS configurations (
     depth_cm INT DEFAULT 40,
     material VARCHAR(100) DEFAULT 'Holz',
     finish VARCHAR(100) DEFAULT 'matt',
-    is_public BOOLEAN DEFAULT FALSE,
     erstellt_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     aktualisiert_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_session (session_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- 4. Benutzer-Favoriten Sideboards
+-- 4. Community Entwürfe
+CREATE TABLE IF NOT EXISTS community_designs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_id VARCHAR(255) DEFAULT NULL,
+    user_id INT DEFAULT NULL,
+    name VARCHAR(255) DEFAULT 'Community Sideboard',
+    config_snapshot JSON NOT NULL,
+    farbe VARCHAR(50) DEFAULT 'weiss',
+    groesse VARCHAR(20) DEFAULT 'mittel',
+    material VARCHAR(100) DEFAULT 'Holz',
+    finish VARCHAR(100) DEFAULT 'matt',
+    width_cm INT DEFAULT 160,
+    height_cm INT DEFAULT 80,
+    depth_cm INT DEFAULT 40,
+    deckel_offen BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- 5. Benutzer-Favoriten Sideboards
 CREATE TABLE IF NOT EXISTS saved_sideboards (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,

@@ -20,6 +20,7 @@ async function injectLayout() {
         <a href="konfigurator.html" class="nav-link">Konfigurator</a>
         <a href="shop.html" class="nav-link">Zubehör</a>
         <a href="berater.html" class="nav-link">KI Berater</a>
+        <a href="community.html" class="nav-link">Community</a>
         <a href="warenkorb.html" class="cart-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="9" cy="21" r="1"></circle>

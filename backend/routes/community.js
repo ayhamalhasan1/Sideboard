@@ -6,27 +6,37 @@ router.get("/", async (req, res) => {
   const db = req.app.locals.db;
   try {
     const [rows] = await db.query(
-      "SELECT id, name, farbe, groesse, material, finish, width_cm, height_cm, depth_cm, deckel_offen, erstellt_am FROM configurations WHERE is_public = TRUE ORDER BY erstellt_am DESC LIMIT 50"
+      "SELECT id, name, farbe, groesse, material, finish, width_cm, height_cm, depth_cm, deckel_offen, created_at FROM community_designs ORDER BY created_at DESC LIMIT 50"
     );
     res.json(rows);
   } catch (err) {
+    console.error('Fehler beim Laden der Community-Entwürfe:', err);
     res.status(500).json({ fehler: "Fehler beim Laden der Community-Entwürfe" });
   }
 });
 
-// Community: Eigene Konfiguration als öffentlich markieren
+// Community: Eigene Konfiguration als öffentlich teilen
 router.post("/share", async (req, res) => {
   const db = req.app.locals.db;
   try {
     let { field, value } = getAuthQueryDetails(req);
     const { name } = req.body;
 
-    const [existing] = await db.query(`SELECT id FROM configurations WHERE ${field} = ?`, [value]);
+    const [existing] = await db.query(`SELECT * FROM configurations WHERE ${field} = ? ORDER BY aktualisiert_am DESC LIMIT 1`, [value]);
     if (existing.length === 0) return res.status(404).json({ fehler: "Keine Konfiguration gefunden" });
 
-    await db.query(`UPDATE configurations SET is_public = TRUE, name = ? WHERE ${field} = ?`, [name || 'Community Sideboard', value]);
+    const config = existing[0];
+    const snapshot = JSON.stringify(config);
+
+    await db.query(
+      `INSERT INTO community_designs (session_id, user_id, name, config_snapshot, farbe, groesse, material, finish, width_cm, height_cm, depth_cm, deckel_offen)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [req.sessionID, req.session.userId || null, name || 'Community Sideboard', snapshot, config.farbe, config.groesse, config.material, config.finish, config.width_cm, config.height_cm, config.depth_cm, config.deckel_offen]
+    );
+
     res.json({ erfolg: true });
   } catch (err) {
+    console.error('Fehler beim Teilen:', err);
     res.status(500).json({ fehler: "Fehler beim Teilen" });
   }
 });
@@ -36,12 +46,21 @@ router.get("/:id", async (req, res) => {
   const db = req.app.locals.db;
   try {
     const [rows] = await db.query(
-      "SELECT farbe, groesse, material, finish, width_cm, height_cm, depth_cm, deckel_offen FROM configurations WHERE id = ? AND is_public = TRUE",
+      "SELECT config_snapshot FROM community_designs WHERE id = ?",
       [req.params.id]
     );
     if (rows.length === 0) return res.status(404).json({ fehler: "Entwurf nicht gefunden" });
-    res.json(rows[0]);
+
+    let config;
+    try {
+      config = JSON.parse(rows[0].config_snapshot);
+    } catch (parseErr) {
+      // Fallback: Wenn es bereits ein Objekt ist
+      config = rows[0].config_snapshot;
+    }
+    res.json(config);
   } catch (err) {
+    console.error('Fehler beim Laden des Entwurfs:', err);
     res.status(500).json({ fehler: "Fehler beim Laden" });
   }
 });
