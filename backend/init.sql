@@ -69,7 +69,6 @@ CREATE TABLE IF NOT EXISTS accessories (
     stock INT DEFAULT 100,
     is_active BOOLEAN DEFAULT TRUE
 );
-
 -- 6. Warenkorb
 CREATE TABLE IF NOT EXISTS cart_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
