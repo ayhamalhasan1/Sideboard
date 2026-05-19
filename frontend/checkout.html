@@ -118,7 +118,7 @@
           stadt: document.getElementById('stadt').value
         };
 
-        const res = await fetch(`${window.API}/shop/checkout`, {
+        const res = await fetch(`${window.API}/cart/checkout`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

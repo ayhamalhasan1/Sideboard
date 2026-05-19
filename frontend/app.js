@@ -76,10 +76,10 @@ function showToast(message, isError = false) {
   }, 3000);
 }
 
-// 7. Cart
+// 7. Cart (Redis-Cache)
 async function updateCartBadge() {
   try {
-    const res = await fetch(`${API}/shop/cart`, { credentials: "include" });
+    const res = await fetch(`${API}/cart`, { credentials: "include" });
     if (!res.ok) return;
     const items = await res.json();
     const count = items.reduce((acc, item) => acc + item.menge, 0);
@@ -93,12 +93,13 @@ async function updateCartBadge() {
 
 async function addToCart(accessoryId) {
   try {
-    const res = await fetch(`${API}/shop/cart`, {
+    const res = await fetch(`${API}/cart`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       credentials: "include", body: JSON.stringify({ accessory_id: accessoryId }),
     });
     const data = await res.json();
     if (data.erfolg) {
+      showToast("Artikel zum Warenkorb hinzugefügt ✓");
       updateCartBadge();
       if (typeof window.loadWarenkorb === 'function') window.loadWarenkorb();
     }
