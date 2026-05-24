@@ -1,265 +1,924 @@
 ﻿<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sideboard Konfigurator | Konfigurator</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HOLLERITH Sideboard BASIC | Konfigurator</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    body {
+      background: #f6f6f4;
+    }
+
+    .page-wrap {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      margin-bottom: 1.5rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .product-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1.18fr) minmax(390px, 0.82fr);
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .gallery-card,
+    .config-card,
+    .details-card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.06);
+    }
+
+    .gallery-card {
+      padding: 1.3rem;
+    }
+
+    .hero-image {
+      width: 100%;
+      height: 560px;
+      object-fit: cover;
+      border-radius: 18px;
+      background: #eee;
+      display: block;
+    }
+
+    .image-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1rem;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .variant-pill {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .config-card {
+      padding: 2rem;
+      position: sticky;
+      top: 105px;
+    }
+
+    .brand {
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      color: var(--ikea-blue);
+      margin-bottom: 0.5rem;
+    }
+
+    .title {
+      font-size: 2.35rem;
+      line-height: 1;
+      letter-spacing: -1.2px;
+      font-weight: 900;
+      margin-bottom: 0.9rem;
+    }
+
+    .description {
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-bottom: 1.6rem;
+    }
+
+    .price-block {
+      padding: 1.3rem;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #f8fafc, #ffffff);
+      border: 1px solid #e5e7eb;
+      margin-bottom: 2rem;
+    }
+
+    .price-label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .price {
+      font-size: 2.7rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 900;
+      margin-bottom: 0.9rem;
+    }
+
+    .size-grid {
+      display: grid;
+      gap: 0.8rem;
+      margin-bottom: 2rem;
+    }
+
+    .size-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #fff;
+    }
+
+    .size-card:hover {
+      border-color: #111;
+      transform: translateY(-1px);
+    }
+
+    .size-card.active {
+      border-color: var(--ikea-blue);
+      background: #eef6ff;
+      box-shadow: 0 10px 25px rgba(0,88,163,0.12);
+    }
+
+    .radio {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      position: relative;
+    }
+
+    .size-card.active .radio {
+      border-color: var(--ikea-blue);
+    }
+
+    .size-card.active .radio::after {
+      content: "";
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--ikea-blue);
+      top: 3px;
+      left: 3px;
+    }
+
+    .size-main {
+      font-weight: 900;
+      font-size: 1.05rem;
+    }
+
+    .size-sub {
+      color: var(--text-muted);
+      font-size: 0.87rem;
+      margin-top: 0.15rem;
+    }
+
+    .size-price {
+      font-weight: 900;
+      color: var(--text-dark);
+      white-space: nowrap;
+    }
+
+    .surface-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .surface-card {
+      min-height: 86px;
+      padding: 0.95rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      font: inherit;
+    }
+
+    .surface-card:hover {
+      border-color: #111;
+      transform: translateY(-1px);
+    }
+
+    .surface-card.active {
+      border-color: var(--ikea-blue);
+      background: #eef6ff;
+      box-shadow: 0 10px 25px rgba(0,88,163,0.12);
+      color: var(--ikea-blue);
+    }
+
+    .surface-top {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 900;
+    }
+
+    .surface-sub {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      margin-top: 0.35rem;
+      line-height: 1.35;
+    }
+
+    .swatch {
+      width: 23px;
+      height: 23px;
+      border-radius: 50%;
+      border: 1px solid #cbd5e1;
+      flex: 0 0 auto;
+    }
+
+    .white { background: #fff; }
+    .black { background: #111; }
+    .wood { background: linear-gradient(135deg, #9b6330, #d8a761); }
+    .gloss-white { background: linear-gradient(135deg, #fff 0%, #ddd 48%, #fff 56%); }
+    .gloss-black { background: linear-gradient(135deg, #000 0%, #444 48%, #111 56%); }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      overflow: hidden;
+      margin: 1.4rem 0;
+      background: #fafafa;
+    }
+
+    .summary-item {
+      padding: 1rem 0.7rem;
+      text-align: center;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    .summary-item:last-child {
+      border-right: none;
+    }
+
+    .summary-icon {
+      font-size: 1.35rem;
+      color: var(--ikea-blue);
+      font-weight: 900;
+    }
+
+    .summary-value {
+      font-weight: 900;
+      margin-top: 0.3rem;
+    }
+
+    .summary-label {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    .spec-list {
+      border-top: 1px solid #e5e7eb;
+      margin-top: 1.2rem;
+      padding-top: 1.2rem;
+      display: grid;
+      gap: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      font-size: 0.94rem;
+    }
+
+    .spec-row strong {
+      color: var(--text-dark);
+    }
+
+    .actions {
+      display: grid;
+      gap: 0.8rem;
+      margin-top: 1.8rem;
+    }
+
+    .cart-main {
+      width: 100%;
+      border-radius: 999px;
+      padding: 1.15rem 1.5rem;
+      font-size: 1.05rem;
+      box-shadow: 0 14px 30px rgba(0,88,163,0.22);
+    }
+
+    .cart-secondary {
+      width: 100%;
+      border-radius: 999px;
+      text-align: center;
+    }
+
+    .details-card {
+      margin-top: 2rem;
+      padding: 1.5rem;
+    }
+
+    .details-title {
+      font-size: 1.25rem;
+      font-weight: 900;
+      margin-bottom: 1rem;
+    }
+
+    .drawing-shell {
+      background: linear-gradient(180deg, #fbfbfb, #fff);
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      padding: 1rem;
+      overflow: hidden;
+    }
+
+    .drawing-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .note {
+      margin-top: 1rem;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    .info-box {
+      margin-top: 2rem;
+      padding: 1.3rem 1.5rem;
+      display: flex;
+      gap: 1rem;
+      background: #eef6ff;
+      border-color: #b9dcff;
+      color: #004581;
+    }
+
+    .info-icon {
+      font-size: 1.5rem;
+    }
+
+    @media (max-width: 1050px) {
+      .product-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .config-card {
+        position: static;
+      }
+
+      .hero-image {
+        height: 420px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-wrap {
+        padding: 1rem;
+      }
+
+      .surface-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-item {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .summary-item:last-child {
+        border-bottom: none;
+      }
+
+      .hero-image {
+        height: 300px;
+      }
+
+      .title {
+        font-size: 1.9rem;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <main>
-    <div style="margin-bottom: 2rem;">
-      <a href="index.html" style="color: var(--text-muted); text-decoration: none;">&larr; Zurück</a>
-    </div>
+  <main class="page-wrap">
+    <a class="back-link" href="index.html">← Zurück</a>
 
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem;">
-      <h1 class="page-title" style="margin-bottom: 0;">Gestalte dein Sideboard</h1>
-      <div style="text-align: right;">
-        <span style="color: var(--text-muted); font-size: 0.9rem;">Gesamtpreis:</span>
-        <div id="livePreis" style="font-size: 2rem; font-weight: 800; color: var(--text-dark);">299,00 €</div>
-      </div>
-    </div>
+    <div class="product-shell">
+      <section>
+        <div class="gallery-card">
+          <img
+            id="produktBild"
+            class="hero-image"
+            src="http://localhost:9000/sideboard/weiss-matt-120.jpg"
+            alt="HOLLERITH Sideboard BASIC"
+            onerror="zeigeBildFallback()"
+          />
 
-    <div class="card">
-      <div class="konfig-grid">
-        <!-- Vorschau (links) -->
-        <div class="vorschau-container">
-          <div class="sideboard-vorschau mittel weiss" id="sideboardVorschau">
-            <div class="sideboard-deckel" id="deckelElement"></div>
-            <div class="sideboard-korpus">
-              <div class="fach"></div><div class="fach"></div>
-              <div class="fach"></div><div class="fach"></div>
-            </div>
-            <div class="sideboard-beine">
-              <div class="bein"></div><div class="bein"></div>
-            </div>
+          <div class="image-meta">
+            <span id="bildHinweis">Weiß matt · 120 cm</span>
+            <span class="variant-pill" id="variantPill">2 Schubladen / 2 Türen</span>
           </div>
-          <p style="margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">Live-Vorschau</p>
         </div>
 
-        <!-- Optionen (rechts) -->
-        <div class="optionen">
-          
-          <div class="option-gruppe">
-            <label>1. Wähle die Farbe</label>
-            <div class="auswahl-buttons" id="farbButtons">
-              <button class="auswahl-btn" data-wert="weiss" onclick="waehleOption('farbe', 'weiss')"><span class="farb-punkt weiss"></span>Weiß</button>
-              <button class="auswahl-btn" data-wert="schwarz" onclick="waehleOption('farbe', 'schwarz')"><span class="farb-punkt schwarz"></span>Weiß/Schwarz</button>
-              <button class="auswahl-btn" data-wert="eiche" onclick="waehleOption('farbe', 'eiche')"><span class="farb-punkt eiche"></span>Eiche</button>
-            </div>
-          </div>
+        <div class="details-card">
+          <div class="details-title">Schematische Frontansicht mit Maßen</div>
 
-          <div class="option-gruppe">
-            <label>2. Wähle die Größe (Grundpreis)</label>
-            <div class="auswahl-buttons" id="groesseButtons">
-              <button class="auswahl-btn" data-wert="klein" onclick="waehleOption('groesse', 'klein')">Klein (199€)</button>
-              <button class="auswahl-btn" data-wert="mittel" onclick="waehleOption('groesse', 'mittel')">Mittel (299€)</button>
-              <button class="auswahl-btn" data-wert="gross" onclick="waehleOption('groesse', 'gross')">Groß (399€)</button>
-            </div>
-          </div>
+          <div class="drawing-shell">
+            <svg id="measureSvg" class="drawing-svg" viewBox="0 0 760 460" role="img" aria-label="Maßskizze Sideboard">
+              <defs>
+                <marker id="arrowStart" markerWidth="10" markerHeight="10" refX="2" refY="5" orient="auto">
+                  <path d="M10,0 L0,5 L10,10 Z" fill="#111"></path>
+                </marker>
+                <marker id="arrowEnd" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                  <path d="M0,0 L10,5 L0,10 Z" fill="#111"></path>
+                </marker>
+                <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#b98245"/>
+                  <stop offset="50%" stop-color="#d4a96a"/>
+                  <stop offset="100%" stop-color="#b98245"/>
+                </linearGradient>
+                <linearGradient id="glossWhiteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ffffff"/>
+                  <stop offset="45%" stop-color="#eeeeee"/>
+                  <stop offset="55%" stop-color="#ffffff"/>
+                  <stop offset="100%" stop-color="#e8e8e8"/>
+                </linearGradient>
+                <linearGradient id="glossBlackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#050505"/>
+                  <stop offset="45%" stop-color="#222222"/>
+                  <stop offset="55%" stop-color="#555555"/>
+                  <stop offset="100%" stop-color="#080808"/>
+                </linearGradient>
+              </defs>
 
-          <div class="option-gruppe">
-            <label>3. Material</label>
-            <div class="auswahl-buttons" id="materialButtons">
-              <button class="auswahl-btn" data-wert="Holz" onclick="waehleOption('material', 'Holz')">Holz (+0€)</button>
-              <button class="auswahl-btn" data-wert="Metall" onclick="waehleOption('material', 'Metall')">Metall (+50€)</button>
-              <button class="auswahl-btn" data-wert="Glas" onclick="waehleOption('material', 'Glas')">Glas (+100€)</button>
-            </div>
-          </div>
+              <text x="70" y="35" font-size="18" font-weight="800" fill="#111">
+                Frontansicht
+              </text>
+              <text id="svgSubline" x="70" y="60" font-size="13" fill="#64748b">
+                Variante 120 cm · 2 Schubladen / 2 Türen
+              </text>
 
-          <div class="option-gruppe">
-            <label>4. Finish</label>
-            <div class="auswahl-buttons" id="finishButtons">
-              <button class="auswahl-btn" data-wert="matt" onclick="waehleOption('finish', 'matt')">Matt (+0€)</button>
-              <button class="auswahl-btn" data-wert="glänzend" onclick="waehleOption('finish', 'glänzend')">Glänzend (+30€)</button>
-            </div>
-          </div>
+              <g id="frontGroup"></g>
 
-          <div class="option-gruppe">
-             <label>5. Maße Feinabstimmung (im Preis inkludiert)</label>
-             <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
-               <span style="flex-basis: 60px;">Breite:</span>
-               <input type="range" id="widthSlider" min="100" max="250" value="160" oninput="updateDimensions()" style="flex-grow: 1;">
-               <span id="widthValue" style="width: 50px;">160cm</span>
-             </div>
-             <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
-               <span style="flex-basis: 60px;">Höhe:</span>
-               <input type="range" id="heightSlider" min="50" max="120" value="80" oninput="updateDimensions()" style="flex-grow: 1;">
-               <span id="heightValue" style="width: 50px;">80cm</span>
-             </div>
-          </div>
+              <line x1="120" y1="355" x2="610" y2="355" stroke="#111" stroke-width="2" marker-start="url(#arrowStart)" marker-end="url(#arrowEnd)" />
+              <text id="svgWidth" x="365" y="385" text-anchor="middle" font-size="18" font-weight="800" fill="#111">120 cm</text>
 
-          <div class="option-gruppe">
-            <label>6. Deckel optional öffnen</label>
-            <button class="btn-secondary" id="deckelBtn" onclick="toggleDeckel()" style="width: 100%;">
-              <span id="deckelText">Deckel hochklappen</span>
-            </button>
-          </div>
+              <line x1="650" y1="105" x2="650" y2="315" stroke="#111" stroke-width="2" marker-start="url(#arrowStart)" marker-end="url(#arrowEnd)" />
+              <text x="674" y="215" font-size="18" font-weight="800" fill="#111">75 cm</text>
 
-          <!-- Speichern-Button -->
-          <div style="margin-top: 3rem; display: flex; flex-direction: column; gap: 1rem;">
-            <button class="btn-primary" style="width: 100%;" onclick="addSideboardToCart()">
-              🛒 In den Warenkorb
-            </button>
-            <button class="btn-secondary" style="width: 100%;" onclick="speichereKonfiguration()">
-              Konfiguration speichern & aktualisieren
-            </button>
-            <div id="favoritSpeichernDiv" style="display: none; flex-direction: column; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-              <input type="text" id="favoritName" placeholder="Name für neues Sideboard..." style="padding: 0.8rem; border: 2px solid var(--border); border-radius: var(--radius-sm); font-family: inherit;">
-              <button class="btn-secondary" style="width: 100%;" onclick="speichereAlsFavorit()">
-                Als neues Sideboard im Profil speichern
-              </button>
-            </div>
+              <line x1="610" y1="355" x2="670" y2="300" stroke="#111" stroke-width="2" marker-start="url(#arrowStart)" marker-end="url(#arrowEnd)" />
+              <text x="670" y="342" font-size="18" font-weight="800" fill="#111">37 cm</text>
+
+              <text x="70" y="430" font-size="13" fill="#64748b">
+                Hinweis: Schematische Darstellung, nicht maßstabsgetreu. Alle Maße sind Außenmaße.
+              </text>
+            </svg>
           </div>
-          
         </div>
-      </div>
+
+        <div class="info-box">
+          <div class="info-icon">★</div>
+          <div>
+            <strong>Gut zu wissen</strong><br />
+            Die Frontaufteilung passt sich automatisch an die Breite an. Höhe und Tiefe bleiben bei allen Varianten gleich.
+          </div>
+        </div>
+      </section>
+
+      <aside class="config-card">
+        <div class="brand">HOLLERITH</div>
+        <h1 class="title">Sideboard BASIC</h1>
+
+        <p class="description">
+          Zeitloses Sideboard für Wohnzimmer, Flur oder Büro. Wähle die passende Größe und Oberfläche für deinen Raum.
+        </p>
+
+        <div class="price-block">
+          <div class="price-label">Gesamtpreis</div>
+          <div class="price" id="livePreis">129,00 €</div>
+        </div>
+
+        <div class="section-title">1. Größe wählen</div>
+        <div class="size-grid" id="sizeGrid">
+          <div class="size-card" data-value="120" onclick="chooseSize('120')">
+            <span class="radio"></span>
+            <div>
+              <div class="size-main">120 × 75 × 37 cm</div>
+              <div class="size-sub">2 Schubladen / 2 Türen</div>
+            </div>
+            <div class="size-price">129 €</div>
+          </div>
+
+          <div class="size-card" data-value="160" onclick="chooseSize('160')">
+            <span class="radio"></span>
+            <div>
+              <div class="size-main">160 × 75 × 37 cm</div>
+              <div class="size-sub">2 Schubladen / 3 Türen</div>
+            </div>
+            <div class="size-price">+20 €</div>
+          </div>
+
+          <div class="size-card" data-value="180" onclick="chooseSize('180')">
+            <span class="radio"></span>
+            <div>
+              <div class="size-main">180 × 75 × 37 cm</div>
+              <div class="size-sub">2 Schubladen / 4 Türen</div>
+            </div>
+            <div class="size-price">+40 €</div>
+          </div>
+        </div>
+
+        <div class="section-title">2. Oberfläche / Farbe wählen</div>
+        <div class="surface-grid" id="surfaceButtons">
+          <button class="surface-card" data-value="weiss-matt" onclick="chooseSurface('weiss-matt')">
+            <span class="surface-top"><span class="swatch white"></span>Weiß matt</span>
+            <span class="surface-sub">ruhig, hell, ohne Aufpreis</span>
+          </button>
+
+          <button class="surface-card" data-value="weiss-hochglanz" onclick="chooseSurface('weiss-hochglanz')">
+            <span class="surface-top"><span class="swatch gloss-white"></span>Weiß Hochglanz</span>
+            <span class="surface-sub">glänzend, modern · +10 €</span>
+          </button>
+
+          <button class="surface-card" data-value="schwarz-matt" onclick="chooseSurface('schwarz-matt')">
+            <span class="surface-top"><span class="swatch black"></span>Schwarz matt</span>
+            <span class="surface-sub">clean, kontrastreich, ohne Aufpreis</span>
+          </button>
+
+          <button class="surface-card" data-value="schwarz-hochglanz" onclick="chooseSurface('schwarz-hochglanz')">
+            <span class="surface-top"><span class="swatch gloss-black"></span>Schwarz Hochglanz</span>
+            <span class="surface-sub">edel, spiegelnd · +10 €</span>
+          </button>
+
+          <button class="surface-card" data-value="holzoptik" onclick="chooseSurface('holzoptik')">
+            <span class="surface-top"><span class="swatch wood"></span>Holzoptik</span>
+            <span class="surface-sub">warm, wohnlich · +20 €</span>
+          </button>
+        </div>
+
+        <div class="summary-strip">
+          <div class="summary-item">
+            <div class="summary-icon">↔</div>
+            <div class="summary-value" id="summaryWidth">120 cm</div>
+            <div class="summary-label">Breite</div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-icon">↕</div>
+            <div class="summary-value">75 cm</div>
+            <div class="summary-label">Höhe</div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-icon">↗</div>
+            <div class="summary-value">37 cm</div>
+            <div class="summary-label">Tiefe</div>
+          </div>
+        </div>
+
+        <div class="spec-list">
+          <div class="spec-row">
+            <strong>Frontaufteilung</strong>
+            <span id="frontText">2 Schubladen / 2 Türen</span>
+          </div>
+          <div class="spec-row">
+            <strong>Schubladenbreite</strong>
+            <span id="drawerWidthText">ca. 55 cm</span>
+          </div>
+          <div class="spec-row">
+            <strong>Türbreite</strong>
+            <span id="doorWidthText">ca. 55 cm</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary cart-main" onclick="saveConfiguration()">🛒 In den Warenkorb</button>
+          <a href="warenkorb.html" class="btn-secondary cart-secondary">Zum Warenkorb</a>
+        </div>
+      </aside>
     </div>
   </main>
 
   <script src="app.js"></script>
+
   <script>
-    let konfig = {
-      farbe: "weiss",
-      groesse: "mittel",
-      material: "Holz",
-      finish: "matt",
-      width_cm: 160,
-      height_cm: 80,
-      depth_cm: 40,
-      deckel_offen: false
+    const variants = {
+      "120": {
+        width: 120,
+        drawers: 2,
+        doors: 2,
+        drawerWidth: "ca. 55 cm",
+        doorWidth: "ca. 55 cm",
+        backendSize: "klein"
+      },
+      "160": {
+        width: 160,
+        drawers: 2,
+        doors: 3,
+        drawerWidth: "ca. 75 cm",
+        doorWidth: "ca. 49 cm",
+        backendSize: "mittel"
+      },
+      "180": {
+        width: 180,
+        drawers: 2,
+        doors: 4,
+        drawerWidth: "ca. 85 cm",
+        doorWidth: "ca. 42 cm",
+        backendSize: "gross"
+      }
     };
 
-    function rechnePreis() {
-      let preis = 199;
-      if (konfig.groesse === 'mittel') preis = 299;
-      if (konfig.groesse === 'gross') preis = 399;
-      
-      if (konfig.material === 'Metall') preis += 50;
-      if (konfig.material === 'Glas') preis += 100;
-      if (konfig.finish === 'glänzend') preis += 30;
-      
-      document.getElementById('livePreis').textContent = preis.toFixed(2).replace('.', ',') + " €";
-    }
-
-    function waehleOption(typ, wert) {
-      konfig[typ] = wert;
-      // Buttons aktualisieren
-      const containerId = typ + 'Buttons';
-      if (document.getElementById(containerId)) {
-        document.querySelectorAll(`#${containerId} .auswahl-btn`).forEach(btn => {
-          btn.classList.toggle("aktiv", btn.dataset.wert === wert);
-        });
+    const surfaces = {
+      "weiss-matt": {
+        label: "Weiß matt",
+        backendColor: "weiss",
+        backendFinish: "matt",
+        fill: "#f8f8f8",
+        stroke: "#111",
+        handle: "#111"
+      },
+      "weiss-hochglanz": {
+        label: "Weiß Hochglanz",
+        backendColor: "weiss",
+        backendFinish: "glänzend",
+        fill: "url(#glossWhiteGrad)",
+        stroke: "#111",
+        handle: "#111"
+      },
+      "schwarz-matt": {
+        label: "Schwarz matt",
+        backendColor: "schwarz",
+        backendFinish: "matt",
+        fill: "#202020",
+        stroke: "#000",
+        handle: "#f8fafc"
+      },
+      "schwarz-hochglanz": {
+        label: "Schwarz Hochglanz",
+        backendColor: "schwarz",
+        backendFinish: "glänzend",
+        fill: "url(#glossBlackGrad)",
+        stroke: "#000",
+        handle: "#f8fafc"
+      },
+      "holzoptik": {
+        label: "Holzoptik",
+        backendColor: "eiche",
+        backendFinish: "matt",
+        fill: "url(#woodGrad)",
+        stroke: "#6b4423",
+        handle: "#111"
       }
-      
-      aktualisiereVorschau();
-      rechnePreis();
+    };
+
+    let config = {
+      size: "120",
+      surface: "weiss-matt"
+    };
+
+    function calculatePrice() {
+      let price = 129;
+
+      if (config.size === "160") price += 20;
+      if (config.size === "180") price += 40;
+
+      if (config.surface === "weiss-hochglanz") price += 10;
+      if (config.surface === "schwarz-hochglanz") price += 10;
+      if (config.surface === "holzoptik") price += 20;
+
+      return price;
     }
 
-    function updateDimensions() {
-      konfig.width_cm = document.getElementById('widthSlider').value;
-      konfig.height_cm = document.getElementById('heightSlider').value;
-      document.getElementById('widthValue').textContent = konfig.width_cm + 'cm';
-      document.getElementById('heightValue').textContent = konfig.height_cm + 'cm';
-      rechnePreis();
+    function imageName() {
+      return `${config.surface}-${config.size}.jpg`;
     }
 
-    function toggleDeckel() {
-      konfig.deckel_offen = !konfig.deckel_offen;
-      document.getElementById("deckelElement").classList.toggle("offen", konfig.deckel_offen);
-      document.getElementById("deckelText").textContent = konfig.deckel_offen ? "Deckel zuklappen" : "Deckel hochklappen";
+    function formatPrice(value) {
+      return value.toFixed(2).replace(".", ",") + " €";
     }
 
-    function aktualisiereVorschau() {
-      const vorschau = document.getElementById("sideboardVorschau");
-      vorschau.className = "sideboard-vorschau " + konfig.farbe + " " + konfig.groesse;
+    function updatePrice() {
+      document.getElementById("livePreis").textContent = formatPrice(calculatePrice());
     }
 
-    async function ladeKonfiguration() {
+    function updateButtons() {
+      document.querySelectorAll("#sizeGrid .size-card").forEach(card => {
+        card.classList.toggle("active", card.dataset.value === config.size);
+      });
+
+      document.querySelectorAll("#surfaceButtons .surface-card").forEach(card => {
+        card.classList.toggle("active", card.dataset.value === config.surface);
+      });
+    }
+
+    function updateImage() {
+      const image = document.getElementById("produktBild");
+      const surface = surfaces[config.surface];
+      const variant = variants[config.size];
+
+      image.onerror = zeigeBildFallback;
+      image.src = `${MINIO_URL}/${imageName()}`;
+      image.alt = `HOLLERITH Sideboard BASIC ${surface.label} ${config.size} cm`;
+
+      document.getElementById("bildHinweis").textContent = `${surface.label} · ${config.size} × 75 × 37 cm`;
+      document.getElementById("variantPill").textContent = `${variant.drawers} Schubladen / ${variant.doors} Türen`;
+    }
+
+    function zeigeBildFallback() {
+      const image = document.getElementById("produktBild");
+      image.onerror = null;
+      image.src =
+        "data:image/svg+xml;charset=UTF-8," +
+        encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="900" height="620" viewBox="0 0 900 620">
+            <rect width="900" height="620" fill="#f5f5f5"/>
+            <rect x="160" y="155" width="580" height="310" rx="8" fill="#ffffff" stroke="#cccccc" stroke-width="4"/>
+            <text x="450" y="525" text-anchor="middle" font-family="Arial" font-size="26" fill="#666">
+              Bild fehlt: ${imageName()}
+            </text>
+          </svg>
+        `);
+    }
+
+    function updateDetails() {
+      const variant = variants[config.size];
+
+      document.getElementById("summaryWidth").textContent = `${variant.width} cm`;
+      document.getElementById("frontText").textContent = `${variant.drawers} Schubladen / ${variant.doors} Türen`;
+      document.getElementById("drawerWidthText").textContent = variant.drawerWidth;
+      document.getElementById("doorWidthText").textContent = variant.doorWidth;
+
+      document.getElementById("svgWidth").textContent = `${variant.width} cm`;
+      document.getElementById("svgSubline").textContent =
+        `Variante ${variant.width} cm · ${variant.drawers} Schubladen / ${variant.doors} Türen`;
+    }
+
+    function drawFrontSvg() {
+      const variant = variants[config.size];
+      const surface = surfaces[config.surface];
+      const group = document.getElementById("frontGroup");
+
+      const x = 120;
+      const y = 105;
+      const w = 490;
+      const h = 210;
+      const drawerH = 72;
+      const doorH = h - drawerH;
+
+      let html = `
+        <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${surface.fill}" stroke="${surface.stroke}" stroke-width="3" rx="3"/>
+      `;
+
+      const drawerW = w / variant.drawers;
+      for (let i = 0; i < variant.drawers; i++) {
+        const dx = x + i * drawerW;
+        html += `
+          <rect x="${dx}" y="${y}" width="${drawerW}" height="${drawerH}" fill="transparent" stroke="${surface.stroke}" stroke-width="2"/>
+          <rect x="${dx + drawerW / 2 - 18}" y="${y + drawerH / 2 - 2}" width="36" height="4" rx="2" fill="${surface.handle}"/>
+        `;
+      }
+
+      const doorW = w / variant.doors;
+      for (let i = 0; i < variant.doors; i++) {
+        const dx = x + i * doorW;
+        html += `
+          <rect x="${dx}" y="${y + drawerH}" width="${doorW}" height="${doorH}" fill="transparent" stroke="${surface.stroke}" stroke-width="2"/>
+          <rect x="${dx + doorW / 2 - 2}" y="${y + drawerH + doorH / 2 - 32}" width="4" height="64" rx="2" fill="${surface.handle}"/>
+        `;
+      }
+
+      group.innerHTML = html;
+    }
+
+    function updateAll() {
+      updateButtons();
+      updatePrice();
+      updateImage();
+      updateDetails();
+      drawFrontSvg();
+    }
+
+    function chooseSize(size) {
+      config.size = size;
+      updateAll();
+    }
+
+    function chooseSurface(surface) {
+      config.surface = surface;
+      updateAll();
+    }
+
+    function mapOldSize(dbSize, widthCm) {
+      if (String(widthCm) === "120") return "120";
+      if (String(widthCm) === "160") return "160";
+      if (String(widthCm) === "180") return "180";
+
+      if (dbSize === "klein") return "120";
+      if (dbSize === "mittel") return "160";
+      if (dbSize === "gross") return "180";
+
+      return "120";
+    }
+
+    function mapOldSurface(dbConfig) {
+      const color = dbConfig.farbe || "weiss";
+      const finish = dbConfig.finish || "matt";
+
+      if (color === "weiss" && finish === "glänzend") return "weiss-hochglanz";
+      if (color === "schwarz" && finish === "glänzend") return "schwarz-hochglanz";
+      if (color === "schwarz") return "schwarz-matt";
+      if (color === "eiche" || color === "holzoptik") return "holzoptik";
+
+      return "weiss-matt";
+    }
+
+    async function loadConfiguration() {
       try {
-        const antwort = await fetch(`${API}/config`, { credentials: "include" });
-        if(!antwort.ok) return;
-        const dbKonfig = await antwort.json();
-        
-        waehleOption('farbe', dbKonfig.farbe || "weiss");
-        waehleOption('groesse', dbKonfig.groesse || "mittel");
-        waehleOption('material', dbKonfig.material || "Holz");
-        waehleOption('finish', dbKonfig.finish || "matt");
-        
-        document.getElementById('widthSlider').value = dbKonfig.width_cm || 160;
-        document.getElementById('heightSlider').value = dbKonfig.height_cm || 80;
-        updateDimensions();
+        const response = await fetch(`${API}/config`, { credentials: "include" });
+        if (!response.ok) return;
 
-        if (dbKonfig.deckel_offen) { toggleDeckel(); }
-        rechnePreis();
-      } catch (err) {}
-    }
+        const dbConfig = await response.json();
 
-    async function speichereKonfiguration(silent = false) {
-      try {
-        const antwort = await fetch(`${API}/config`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          credentials: "include", body: JSON.stringify(konfig),
-        });
-        const daten = await antwort.json();
-        if (daten.erfolg && !silent) { showToast("Konfiguration gespeichert"); updateCartBadge(); }
-      } catch (err) {
-        if (!silent) showToast("Fehler beim Speichern", true);
+        config.size = mapOldSize(dbConfig.groesse, dbConfig.width_cm);
+        config.surface = dbConfig.oberflaeche || mapOldSurface(dbConfig);
+
+        updateAll();
+      } catch (error) {
+        console.warn("Konfiguration konnte nicht geladen werden", error);
       }
     }
 
-    // Sideboard-Konfiguration in Redis-Warenkorb legen
-    async function addSideboardToCart() {
+    async function saveConfiguration() {
+      const variant = variants[config.size];
+      const surface = surfaces[config.surface];
+
+      const payload = {
+        groesse: variant.backendSize,
+        farbe: surface.backendColor,
+        finish: surface.backendFinish,
+        material: "Holz",
+        width_cm: variant.width,
+        height_cm: 75,
+        depth_cm: 37,
+        deckel_offen: false,
+        oberflaeche: config.surface,
+        groesse_cm: Number(config.size),
+        preis: calculatePrice()
+      };
+
       try {
-        const res = await fetch(`${API}/cart/sideboard`, {
+        const response = await fetch(`${API}/config`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify(konfig)
+          body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        if (data.erfolg) {
-          showToast("Sideboard zum Warenkorb hinzugefügt ✓");
+
+        const data = await response.json();
+
+        if (response.ok && data.erfolg) {
+          showToast("Sideboard wurde in den Warenkorb gelegt");
           updateCartBadge();
         } else {
-          showToast(data.fehler || "Fehler beim Hinzufügen", true);
+          showToast(data.fehler || "Fehler beim Speichern", true);
         }
-      } catch (err) {
-        showToast("Netzwerkfehler", true);
+      } catch (error) {
+        showToast("Fehler beim Speichern", true);
       }
     }
 
-    async function speichereAlsFavorit() {
-      const name = document.getElementById("favoritName").value;
-      if (!name) return showToast("Bitte Namen eingeben!", true);
-      try {
-        await speichereKonfiguration(true);
-        const res = await fetch(`${API}/config/saved`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          credentials: "include", body: JSON.stringify({ name })
-        });
-        if (res.ok) {
-          showToast("Als Profil-Favorit gespeichert!");
-          document.getElementById("favoritName").value = "";
-        }
-      } catch(err) { showToast("Fehler", true); }
-    }
-
     document.addEventListener("DOMContentLoaded", () => {
-      // Default UI setup
-      waehleOption('farbe', konfig.farbe);
-      waehleOption('groesse', konfig.groesse);
-      waehleOption('material', konfig.material);
-      waehleOption('finish', konfig.finish);
-      
-      ladeKonfiguration();
-      
-      setTimeout(() => {
-        if (window.currentUser) {
-          document.getElementById('favoritSpeichernDiv').style.display = 'flex';
-        }
-      }, 600);
+      updateAll();
+      loadConfiguration();
     });
   </script>
 </body>
