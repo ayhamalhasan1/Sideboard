@@ -5,8 +5,13 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   const db = req.app.locals.db;
   try {
+    const [columns] = await db.query(
+      "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'community_designs' AND COLUMN_NAME IN ('design_name', 'name')"
+    );
+    const columnName = columns.some(col => col.COLUMN_NAME === 'design_name') ? 'design_name' : 'name';
+
     const [rows] = await db.query(
-      "SELECT id, name, farbe, groesse, material, finish, width_cm, height_cm, depth_cm, deckel_offen, created_at FROM community_designs ORDER BY created_at DESC LIMIT 50"
+      `SELECT id, ${columnName} AS design_name, farbe, groesse, material, finish, width_cm, height_cm, depth_cm, deckel_offen, created_at FROM community_designs ORDER BY created_at DESC LIMIT 50`
     );
     res.json(rows);
   } catch (err) {
@@ -20,19 +25,34 @@ router.post("/share", async (req, res) => {
   const db = req.app.locals.db;
   try {
     let { field, value } = getAuthQueryDetails(req);
-    const { name } = req.body;
+    const payload = req.body;
+    const designName = payload.design_name || payload.name || 'Community Sideboard';
 
-    const [existing] = await db.query(`SELECT * FROM configurations WHERE ${field} = ? ORDER BY aktualisiert_am DESC LIMIT 1`, [value]);
-    if (existing.length === 0) return res.status(404).json({ fehler: "Keine Konfiguration gefunden" });
-
-    const config = existing[0];
-    const snapshot = JSON.stringify(config);
-
-    await db.query(
-      `INSERT INTO community_designs (session_id, user_id, name, config_snapshot, farbe, groesse, material, finish, width_cm, height_cm, depth_cm, deckel_offen)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [req.sessionID, req.session.userId || null, name || 'Community Sideboard', snapshot, config.farbe, config.groesse, config.material, config.finish, config.width_cm, config.height_cm, config.depth_cm, config.deckel_offen]
+    const [columns] = await db.query(
+      "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'community_designs' AND COLUMN_NAME IN ('design_name', 'name')"
     );
+    const columnName = columns.some(col => col.COLUMN_NAME === 'design_name') ? 'design_name' : 'name';
+
+    const sql = `INSERT INTO community_designs (session_id, user_id, ${columnName}, config_snapshot, farbe, groesse, oberflaeche, groesse_cm, material, finish, width_cm, height_cm, depth_cm, deckel_offen, preis)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    await db.query(sql, [
+      req.sessionID,
+      req.session.userId || null,
+      designName,
+      JSON.stringify(payload),
+      payload.farbe,
+      payload.groesse,
+      payload.oberflaeche,
+      payload.groesse_cm,
+      payload.material,
+      payload.finish,
+      payload.width_cm,
+      payload.height_cm,
+      payload.depth_cm,
+      payload.deckel_offen,
+      payload.preis
+    ]);
 
     res.json({ erfolg: true });
   } catch (err) {
