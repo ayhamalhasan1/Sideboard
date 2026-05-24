@@ -57,7 +57,7 @@ router.get("/", async (req, res) => {
         const finishPrice = k.finish === "glänzend" ? 30 : 0;
         result.unshift({
           id: "sideboard",
-          menge: 1,
+          menge: k.menge || 1,
           name: `Sideboard (Größe: ${k.groesse}, Farbe: ${k.farbe}, Material: ${k.material}, Finish: ${k.finish})`,
           preis: basePrice + matPrice + finishPrice,
           bild_url: "hero_sideboard.png",
@@ -131,12 +131,23 @@ router.put("/:id", async (req, res) => {
     const { menge } = req.body;
     const itemId = req.params.id;
 
-    if (itemId === "sideboard") return res.json({ erfolg: true }); // unveränderlich
-
     if (!menge || menge < 1)
       return res.status(400).json({ fehler: "Menge muss mindestens 1 sein" });
 
     const key = cartKey(req.sessionID);
+
+    if (itemId === "sideboard") {
+      const existing = await redis.hGet(key, "sideboard");
+      if (!existing) return res.status(404).json({ fehler: "Sideboard nicht im Warenkorb" });
+
+      const entry = JSON.parse(existing);
+      entry.menge = parseInt(menge, 10);
+
+      await redis.hSet(key, "sideboard", JSON.stringify(entry));
+      await redis.expire(key, CART_TTL_SECONDS);
+      return res.json({ erfolg: true });
+    }
+
     const field = `acc:${itemId}`;
 
     const existing = await redis.hGet(key, field);
@@ -201,6 +212,7 @@ router.post("/sideboard", async (req, res) => {
       return res.status(400).json({ fehler: "Konfiguration unvollständig" });
 
     const key = cartKey(req.sessionID);
+    config.menge = config.menge || 1;
     await redis.hSet(key, "sideboard", JSON.stringify(config));
     await redis.expire(key, CART_TTL_SECONDS);
 
@@ -240,11 +252,12 @@ router.post("/checkout", async (req, res) => {
           k.groesse === "gross" ? 399.0 : k.groesse === "mittel" ? 299.0 : 199.0;
         const matPrice = k.material === "Metall" ? 50 : k.material === "Glas" ? 100 : 0;
         const finalPrice = basePrice + matPrice + (k.finish === "glänzend" ? 30 : 0);
-        total += finalPrice;
+        const quantity = k.menge || 1;
+        total += finalPrice * quantity;
         sideboardItem = {
           product_type: "sideboard",
           product_name: `Sideboard ${k.farbe}`,
-          quantity: 1,
+          quantity: quantity,
           unit_price: finalPrice,
           config_snapshot: JSON.stringify(k),
         };
