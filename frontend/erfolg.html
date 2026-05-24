@@ -19,7 +19,11 @@
       <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 4px; margin-bottom: 2rem;">
         <p style="font-weight: 700; margin-bottom: 0.5rem;">Bestellnummer:</p>
         <p style="font-family: monospace; font-size: 1.2rem; color: var(--text-dark);">
-          SDB-<script>document.write(Math.floor(Math.random() * 900000) + 100000)</script>
+          <script>
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderNr = urlParams.get('order') || 'ORD-' + (Math.floor(Math.random() * 900000) + 100000);
+            document.write(orderNr);
+          </script>
         </p>
       </div>
       

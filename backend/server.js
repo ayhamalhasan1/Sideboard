@@ -92,18 +92,16 @@ async function initSession(redisClient) {
 // ============================================
 // Routen einbinden
 // ============================================
-const authRoutes = require("./routes/auth");
 const configRoutes = require("./routes/config");
 const shopRoutes = require("./routes/shop");
-const userRoutes = require("./routes/user");
+const cartRoutes = require("./routes/cart");   // Redis-Warenkorb
 const aiRoutes = require("./routes/ai");
 const reviewsRoutes = require("./routes/reviews");
 
 function registerRoutes() {
-  app.use("/api/auth", authRoutes);
   app.use("/api/config", configRoutes);
   app.use("/api/shop", shopRoutes);
-  app.use("/api/user", userRoutes);
+  app.use("/api/cart", cartRoutes);             // Redis-Warenkorb (schneller Cache)
   app.use("/api/ai", aiRoutes);
   app.use("/api/reviews", reviewsRoutes);
 

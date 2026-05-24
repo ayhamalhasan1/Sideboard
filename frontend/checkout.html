@@ -104,12 +104,6 @@
   <script>
     document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
-      if (!window.currentUser) {
-        showToast("Bitte logge dich ein, um fortzufahren", true);
-        showLogin();
-        return;
-      }
 
       try {
         const btn = e.target.querySelector('button');
@@ -124,7 +118,7 @@
           stadt: document.getElementById('stadt').value
         };
 
-        const res = await fetch(`${window.API}/shop/checkout`, {
+        const res = await fetch(`${window.API}/cart/checkout`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -134,10 +128,15 @@
         const data = await res.json();
 
         if (res.ok) {
-          showToast(`Bestellung #${data.order_number} erfolgreich!`);
-          setTimeout(() => {
-            window.location.href = "profil.html";
-          }, 2000);
+          // Zeige Erfolgsmeldung direkt auf der Seite
+          document.querySelector('.checkout-form').innerHTML = `
+            <div style="text-align: center; padding: 2rem 0;">
+              <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+              <h2 style="color: var(--ikea-blue); margin-bottom: 1rem;">Danke für deine Bestellung!</h2>
+              <p style="color: var(--text-muted); margin-bottom: 2rem;">Wir haben deine Bestellung <strong>#${data.order_number}</strong> erhalten.</p>
+              <button onclick="window.location.href='index.html'" class="btn-primary">Zurück zur Startseite</button>
+            </div>
+          `;
         } else {
           showToast(data.fehler || "Es gab ein Problem.", true);
           btn.disabled = false;
@@ -148,13 +147,7 @@
       }
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
-      setTimeout(() => {
-        if (!window.currentUser) {
-          showToast("Bitte logge dich vor der Bestellung ein.");
-        }
-      }, 500);
-    });
+
   </script>
 </body>
 </html>
