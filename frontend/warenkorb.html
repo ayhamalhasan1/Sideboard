@@ -48,7 +48,7 @@
   <script>
     async function loadWarenkorb() {
       try {
-        const res = await fetch(`${API}/shop/cart`, { credentials: "include" });
+        const res = await fetch(`${API}/cart`, { credentials: "include" });
         if (!res.ok) throw new Error("API error");
         const items = await res.json();
 
@@ -117,7 +117,7 @@
 
     async function removeFromCart(itemId) {
       try {
-        await fetch(`${API}/shop/cart/${itemId}`, { method: "DELETE", credentials: "include" });
+        await fetch(`${API}/cart/${itemId}`, { method: "DELETE", credentials: "include" });
         loadWarenkorb();
         updateCartBadge();
       } catch (err) {
@@ -128,7 +128,7 @@
     async function updateQuantity(itemId, newMenge) {
       if(itemId === 'sideboard') return;
       try {
-        await fetch(`${API}/shop/cart/${itemId}`, { 
+        await fetch(`${API}/cart/${itemId}`, { 
           method: "PUT", 
           headers: { "Content-Type": "application/json" },
           credentials: "include",

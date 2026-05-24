@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
@@ -99,8 +99,11 @@
 
           <!-- Speichern-Button -->
           <div style="margin-top: 3rem; display: flex; flex-direction: column; gap: 1rem;">
-            <button class="btn-primary" style="width: 100%;" onclick="speichereKonfiguration()">
-              Aktive Konfiguration speichern & aktualisieren
+            <button class="btn-primary" style="width: 100%;" onclick="addSideboardToCart()">
+              🛒 In den Warenkorb
+            </button>
+            <button class="btn-secondary" style="width: 100%;" onclick="speichereKonfiguration()">
+              Konfiguration speichern & aktualisieren
             </button>
             <div id="favoritSpeichernDiv" style="display: none; flex-direction: column; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
               <input type="text" id="favoritName" placeholder="Name für neues Sideboard..." style="padding: 0.8rem; border: 2px solid var(--border); border-radius: var(--radius-sm); font-family: inherit;">
@@ -203,6 +206,27 @@
         if (daten.erfolg && !silent) { showToast("Konfiguration gespeichert"); updateCartBadge(); }
       } catch (err) {
         if (!silent) showToast("Fehler beim Speichern", true);
+      }
+    }
+
+    // Sideboard-Konfiguration in Redis-Warenkorb legen
+    async function addSideboardToCart() {
+      try {
+        const res = await fetch(`${API}/cart/sideboard`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(konfig)
+        });
+        const data = await res.json();
+        if (data.erfolg) {
+          showToast("Sideboard zum Warenkorb hinzugefügt ✓");
+          updateCartBadge();
+        } else {
+          showToast(data.fehler || "Fehler beim Hinzufügen", true);
+        }
+      } catch (err) {
+        showToast("Netzwerkfehler", true);
       }
     }
 

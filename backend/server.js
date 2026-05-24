@@ -94,12 +94,14 @@ async function initSession(redisClient) {
 // ============================================
 const configRoutes = require("./routes/config");
 const shopRoutes = require("./routes/shop");
+const cartRoutes = require("./routes/cart");   // Redis-Warenkorb
 const aiRoutes = require("./routes/ai");
 const reviewsRoutes = require("./routes/reviews");
 
 function registerRoutes() {
   app.use("/api/config", configRoutes);
   app.use("/api/shop", shopRoutes);
+  app.use("/api/cart", cartRoutes);             // Redis-Warenkorb (schneller Cache)
   app.use("/api/ai", aiRoutes);
   app.use("/api/reviews", reviewsRoutes);
 
