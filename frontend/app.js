@@ -35,7 +35,7 @@ async function injectLayout() {
 
   const footerHTML = `
     <footer>
-      <p>&copy; 2026 Sideboard-Konfigurator - Antigravity Auth-Feature</p>
+      <p>&copy; 2026 Sideboard-Konfigurator</p>
     </footer>
   `;
   document.body.insertAdjacentHTML('beforeend', footerHTML);
