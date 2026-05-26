@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS configurations (
     depth_cm INT DEFAULT 40,
     material VARCHAR(100) DEFAULT 'Holz',
     finish VARCHAR(100) DEFAULT 'matt',
+    menge INT DEFAULT 1,
     erstellt_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     aktualisiert_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_session (session_id),

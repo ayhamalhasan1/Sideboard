@@ -38,7 +38,7 @@ router.get("/", async (req, res) => {
       const finishPrice = k.finish === "glänzend" ? 30 : 0;
       items.unshift({
         id: "sideboard",
-        menge: 1,
+        menge: k.menge || 1,
         name: `Sideboard (Größe: ${k.groesse}, Farbe: ${k.farbe}, Material: ${k.material}, Finish: ${k.finish})`,
         preis: basePrice + matPrice + finishPrice,
         bild_url: "hero_sideboard.png",
@@ -94,12 +94,17 @@ router.put("/:id", async (req, res) => {
     const { menge } = req.body;
     if (!menge || menge < 1) return res.status(400).json({ fehler: "Menge muss mindestens 1 sein" });
 
+    const { field, value } = getAuthDetails(req);
+
     if (req.params.id === "sideboard") {
-      // Sideboard quantity is always 1 (config is singular)
+      // Update quantity of sideboard in configurations table
+      await db.query(
+        `UPDATE configurations SET menge = ? WHERE ${field} = ?`,
+        [menge, value]
+      );
       return res.json({ erfolg: true });
     }
 
-    const { field, value } = getAuthDetails(req);
     await db.query(
       `UPDATE cart_items SET menge = ? WHERE accessory_id = ? AND ${field} = ?`,
       [menge, req.params.id, value]
@@ -200,11 +205,12 @@ router.post("/checkout", async (req, res) => {
       const basePrice  = k.groesse === "gross" ? 399 : k.groesse === "mittel" ? 299 : 199;
       const matPrice   = k.material === "Metall" ? 50 : k.material === "Glas" ? 100 : 0;
       const finalPrice = basePrice + matPrice + (k.finish === "glänzend" ? 30 : 0);
-      total += finalPrice;
+      const quantity = k.menge || 1;
+      total += finalPrice * quantity;
       sideboardItem = {
         product_type: "sideboard",
         product_name: `Sideboard ${k.farbe}`,
-        quantity: 1,
+        quantity: quantity,
         unit_price: finalPrice,
         config_snapshot: JSON.stringify(k),
       };

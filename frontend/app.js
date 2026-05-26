@@ -4,7 +4,7 @@
 
 window.API = "/api";
 const API = window.API;
-window.MINIO_URL = "http://localhost:9000/sideboard";  // MinIO Base URL
+window.MINIO_URL = "http://127.0.0.1:9000/sideboard";  // MinIO Base URL
 const MINIO_URL = window.MINIO_URL;
 
 // 3. Layout Injizieren
