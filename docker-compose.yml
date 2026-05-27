@@ -26,7 +26,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./infrastructure/db-init/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-sideboard123}"]
       interval: 10s
@@ -65,7 +65,7 @@ services:
       retries: 5
 
   minio-init:
-    build: ./backend/minio-init
+    build: ./infrastructure/minio-init
     container_name: sideboard-minio-init
     volumes:
       - ./assets:/assets:ro
