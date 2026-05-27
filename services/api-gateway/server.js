@@ -21,6 +21,7 @@ const loadBalancers = {
   configurator: process.env.LB_CONFIGURATOR_URL || "http://lb-configurator:80",
   media:        process.env.LB_MEDIA_URL        || "http://lb-media:80",
   ai:           process.env.LB_AI_URL           || "http://lb-ai:80",
+  community:    process.env.LB_COMMUNITY_URL    || "http://lb-community:80",
 };
 
 function proxy(pathPrefix, target) {
@@ -45,6 +46,7 @@ app.use(proxy("/api/cart",    loadBalancers.cart));
 app.use(proxy("/api/config",  loadBalancers.configurator));
 app.use(proxy("/api/media",   loadBalancers.media));
 app.use(proxy("/api/ai",      loadBalancers.ai));
+app.use(proxy("/api/community", loadBalancers.community));
 
 app.get("/api/health", (req, res) =>
   res.json({ status: "ok", service: "api-gateway", routes: loadBalancers })

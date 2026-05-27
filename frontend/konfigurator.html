@@ -623,6 +623,12 @@
           <button class="btn-primary cart-main" onclick="saveConfiguration()">🛒 In den Warenkorb</button>
           <a href="warenkorb.html" class="btn-secondary cart-secondary">Zum Warenkorb</a>
         </div>
+         <!-- Speichern-Button -->
+        <div style="margin-top: 3rem; display: flex; flex-direction: column; gap: 1rem;">
+          <button class="btn-secondary" style="width: 100%;" onclick="shareToCommunity()">
+            Als Community-Entwurf teilen
+          </button>
+        </div>
       </aside>
     </div>
   </main>
@@ -862,6 +868,26 @@
     }
 
     async function loadConfiguration() {
+      // 1. Prüfe zuerst localStorage für Community-Entwurf
+      const communityEntwurf = localStorage.getItem('communityEntwurf');
+      if (communityEntwurf) {
+        try {
+          const dbConfig = JSON.parse(communityEntwurf);
+          
+          config.size = mapOldSize(dbConfig.groesse, dbConfig.width_cm);
+          config.surface = dbConfig.oberflaeche || mapOldSurface(dbConfig);
+          
+          // Einmal nur laden, dann löschen
+          localStorage.removeItem('communityEntwurf');
+          
+          updateAll();
+          return;
+        } catch (error) {
+          console.warn("Community-Entwurf konnte nicht geladen werden", error);
+        }
+      }
+      
+      // 2. Falls kein Community-Entwurf, versuche vom Server zu laden
       try {
         const response = await fetch(`${API}/config`, { credentials: "include" });
         if (!response.ok) return;
@@ -914,6 +940,42 @@
       } catch (error) {
         showToast("Fehler beim Speichern", true);
       }
+    }
+
+    async function shareToCommunity() {
+      const name = prompt("Name für den Community-Entwurf:");
+      if (!name) return;
+      const variant = variants[config.size];
+      const surface = surfaces[config.surface];
+
+      const payload = {
+        design_name: name,
+        groesse: variant.backendSize,
+        farbe: surface.backendColor,
+        finish: surface.backendFinish,
+        material: "Holz",
+        width_cm: variant.width,
+        height_cm: 75,
+        depth_cm: 37,
+        deckel_offen: false,
+        oberflaeche: config.surface,
+        groesse_cm: Number(config.size),
+        preis: calculatePrice()
+      };
+
+      try {
+        const res = await fetch(`${API}/community/share`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast("Entwurf in der Community geteilt!");
+        } else {
+          showToast("Fehler beim Teilen", true);
+        }
+      } catch(err) { showToast("Fehler", true); }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
