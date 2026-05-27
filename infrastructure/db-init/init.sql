@@ -49,6 +49,29 @@ CREATE TABLE IF NOT EXISTS configurations (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- 4. Community Entwürfe
+CREATE TABLE IF NOT EXISTS community_designs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_id VARCHAR(255) DEFAULT NULL,
+    user_id INT DEFAULT NULL,
+    design_name VARCHAR(255) DEFAULT 'Community Sideboard',
+    config_snapshot JSON NOT NULL,
+    farbe VARCHAR(50) DEFAULT 'weiss',
+    groesse VARCHAR(20) DEFAULT 'mittel',
+    oberflaeche VARCHAR(100) DEFAULT 'weiss-matt',
+    groesse_cm INT DEFAULT 120,
+    material VARCHAR(100) DEFAULT 'Holz',
+    finish VARCHAR(100) DEFAULT 'matt',
+    width_cm INT DEFAULT 160,
+    height_cm INT DEFAULT 80,
+    depth_cm INT DEFAULT 40,
+    deckel_offen BOOLEAN DEFAULT FALSE,
+    preis DECIMAL(10,2) DEFAULT 129.00,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
 -- 4. Benutzer-Favoriten Sideboards
 CREATE TABLE IF NOT EXISTS saved_sideboards (
     id INT AUTO_INCREMENT PRIMARY KEY,
