@@ -37,8 +37,7 @@
           
           grid.innerHTML += `
             <div class="product-card">
-              <img class="product-image" src="${teil.bild_url}" alt="${teil.name}" 
-                   onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 300%22><rect fill=%22%23F5F5F5%22 width=%22300%22 height=%22300%22/><text fill=%22%23484848%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2214%22>Kein Bild</text></svg>'">
+              <img class="product-image" src="${teil.bild_url}" alt="${teil.name}">
               <h3 class="product-name">${teil.name}</h3>
               <p class="product-desc">${teil.beschreibung || 'Passendes Zubehör für dein Sideboard.'}</p>
               <div class="product-price">

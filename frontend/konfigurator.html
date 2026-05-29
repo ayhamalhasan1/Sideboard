@@ -8,7 +8,24 @@
 
   <style>
     body {
-      background: #f6f6f4;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(0, 88, 163, 0.13), transparent 28%),
+        radial-gradient(circle at 88% 18%, rgba(255, 204, 0, 0.18), transparent 26%),
+        linear-gradient(180deg, #f8fafc 0%, #f6f6f4 46%, #ffffff 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+      background-size: 46px 46px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.55), transparent 70%);
     }
 
     .page-wrap {
@@ -380,6 +397,351 @@
       font-size: 1.5rem;
     }
 
+
+
+    .gallery-card {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+    }
+
+    .gallery-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: conic-gradient(from 120deg, transparent, rgba(0,88,163,.12), transparent, rgba(255,204,0,.14), transparent);
+      animation: ambientSpin 14s linear infinite;
+      opacity: .75;
+      pointer-events: none;
+    }
+
+    .gallery-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-image {
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), 0 24px 60px rgba(15,23,42,.12);
+      transition: transform .45s ease, filter .45s ease, box-shadow .45s ease;
+    }
+
+    .gallery-card:hover .hero-image {
+      transform: scale(1.012);
+      filter: saturate(1.06) contrast(1.03);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), 0 30px 80px rgba(15,23,42,.18);
+    }
+
+    .feature-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .65rem;
+      margin: -0.6rem 0 1.5rem;
+    }
+
+    .feature-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .55rem .75rem;
+      border-radius: 999px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      font-size: .84rem;
+      font-weight: 800;
+    }
+
+    .config-card {
+      overflow: hidden;
+    }
+
+    .config-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 7px;
+      background: linear-gradient(90deg, var(--ikea-blue), #00a3ff, var(--ikea-yellow, #ffcc00));
+    }
+
+    .price-block {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .price-block::after {
+      content: "LIVE";
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: .3rem .55rem;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: #166534;
+      font-size: .68rem;
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+
+    .selection-flash {
+      animation: flashPop .34s ease;
+    }
+
+    .drawing-shell {
+      position: relative;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(0, 88, 163, .08), transparent 35%),
+        linear-gradient(180deg, #fbfbfb, #fff);
+    }
+
+    .drawing-shell::after {
+      content: "maßgenaue Logik: Schubladen = Türen";
+      position: absolute;
+      right: 1rem;
+      top: 1rem;
+      padding: .4rem .7rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,.88);
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      font-size: .78rem;
+      font-weight: 900;
+      box-shadow: 0 10px 25px rgba(15,23,42,.08);
+    }
+
+    @keyframes ambientSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes flashPop {
+      0% { transform: scale(.985); }
+      55% { transform: scale(1.012); }
+      100% { transform: scale(1); }
+    }
+
+
+    /* Dezenter Premium-Look: fancy, aber nicht überladen */
+    .back-link {
+      transition: color .22s ease, transform .22s ease;
+    }
+
+    .back-link:hover {
+      color: var(--ikea-blue);
+      transform: translateX(-3px);
+    }
+
+    .gallery-card,
+    .config-card,
+    .details-card {
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+    }
+
+    .gallery-card:hover,
+    .details-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 54px rgba(15,23,42,.09);
+      border-color: #dbe3ef;
+    }
+
+    .gallery-card::before {
+      display: none;
+    }
+
+    .gallery-card {
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.96), rgba(248,250,252,.92));
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-image {
+      transition: transform .28s ease, filter .28s ease, box-shadow .28s ease;
+    }
+
+    .gallery-card:hover .hero-image {
+      transform: scale(1.006);
+      filter: saturate(1.025) contrast(1.015);
+      box-shadow: 0 22px 46px rgba(15,23,42,.13);
+    }
+
+    .image-meta {
+      align-items: center;
+    }
+
+    .variant-pill {
+      background: #0f172a;
+      border-color: #0f172a;
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(15,23,42,.16);
+    }
+
+    .config-card {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.94));
+      box-shadow: 0 20px 58px rgba(15,23,42,.08);
+    }
+
+    .config-card::before {
+      height: 5px;
+      background: linear-gradient(90deg, var(--ikea-blue), #4aa3df, var(--ikea-yellow, #ffcc00));
+    }
+
+    .brand {
+      color: #0058a3;
+    }
+
+    .title {
+      color: #111827;
+      text-wrap: balance;
+    }
+
+    .feature-chips {
+      margin: -0.35rem 0 1.45rem;
+      gap: .55rem;
+    }
+
+    .feature-chip {
+      background: rgba(248,250,252,.9);
+      border: 1px solid #dde6f0;
+      color: #1f2937;
+      box-shadow: 0 8px 18px rgba(15,23,42,.045);
+      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+    }
+
+    .feature-chip:hover {
+      transform: translateY(-2px);
+      background: #fff;
+      border-color: #cbd9ea;
+      box-shadow: 0 12px 24px rgba(15,23,42,.075);
+    }
+
+    .chip-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      border-radius: 999px;
+      background: #eaf4ff;
+      color: var(--ikea-blue);
+      font-size: .7rem;
+      font-weight: 900;
+    }
+
+    .price-block {
+      background:
+        radial-gradient(circle at 90% 20%, rgba(0,88,163,.08), transparent 30%),
+        linear-gradient(135deg, #ffffff, #f8fafc);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 12px 30px rgba(15,23,42,.055);
+    }
+
+    .price-block::after {
+      content: "AKTUELL";
+      background: #eef6ff;
+      color: #0058a3;
+      border: 1px solid #cfe7ff;
+    }
+
+    .price.price-bump {
+      animation: priceBump .28s ease;
+    }
+
+    .size-card,
+    .surface-card {
+      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+    }
+
+    .size-card:hover,
+    .surface-card:hover {
+      border-color: #94a3b8;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 26px rgba(15,23,42,.07);
+    }
+
+    .size-card.active,
+    .surface-card.active {
+      border-color: var(--ikea-blue);
+      background: linear-gradient(135deg, #eef6ff, #ffffff);
+      box-shadow: 0 12px 28px rgba(0,88,163,.11);
+    }
+
+    .summary-strip {
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      box-shadow: 0 10px 24px rgba(15,23,42,.045);
+    }
+
+    .summary-item {
+      transition: background .22s ease;
+    }
+
+    .summary-item:hover {
+      background: #f8fafc;
+    }
+
+    .drawing-shell {
+      background:
+        radial-gradient(circle at 50% 35%, rgba(0,88,163,.045), transparent 34%),
+        linear-gradient(180deg, #ffffff, #fbfbfb);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 14px 30px rgba(15,23,42,.045);
+    }
+
+    .drawing-shell::after {
+      content: "Frontmodule gleich breit";
+      background: #ffffff;
+      color: #334155;
+      border: 1px solid #dbe3ef;
+      box-shadow: 0 8px 18px rgba(15,23,42,.06);
+    }
+
+    .drawing-svg {
+      transition: transform .26s ease, filter .26s ease;
+    }
+
+    .drawing-shell:hover .drawing-svg {
+      transform: translateY(-2px);
+      filter: drop-shadow(0 8px 12px rgba(15,23,42,.08));
+    }
+
+    .cart-main {
+      position: relative;
+      overflow: hidden;
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+
+    .cart-main:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 34px rgba(0,88,163,.24);
+    }
+
+    .cart-main::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-110%);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.32), transparent);
+      transition: transform .55s ease;
+    }
+
+    .cart-main:hover::after {
+      transform: translateX(110%);
+    }
+
+    .selection-flash {
+      animation: softPulse .32s ease;
+    }
+
+    @keyframes softPulse {
+      0% { transform: scale(.996); }
+      55% { transform: scale(1.006); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes priceBump {
+      0% { transform: translateY(0); }
+      45% { transform: translateY(-3px); }
+      100% { transform: translateY(0); }
+    }
+
+
     @media (max-width: 1050px) {
       .product-shell {
         grid-template-columns: 1fr;
@@ -505,10 +867,10 @@
         </div>
 
         <div class="info-box">
-          <div class="info-icon">★</div>
+          <div class="info-icon">◆</div>
           <div>
             <strong>Gut zu wissen</strong><br />
-            Die Frontaufteilung passt sich automatisch an die Breite an. Höhe und Tiefe bleiben bei allen Varianten gleich.
+            Die Front bleibt immer symmetrisch: pro Breite entstehen gleich viele Schubladen und Türen mit identischer Modulbreite.
           </div>
         </div>
       </section>
@@ -520,6 +882,12 @@
         <p class="description">
           Zeitloses Sideboard für Wohnzimmer, Flur oder Büro. Wähle die passende Größe und Oberfläche für deinen Raum.
         </p>
+
+        <div class="feature-chips" aria-label="Produktvorteile">
+          <span class="feature-chip"><span class="chip-icon">●</span> Sofortige Vorschau</span>
+          <span class="feature-chip"><span class="chip-icon">◆</span> Symmetrische Front</span>
+          <span class="feature-chip"><span class="chip-icon">✓</span> Direkt konfigurierbar</span>
+        </div>
 
         <div class="price-block">
           <div class="price-label">Gesamtpreis</div>
@@ -541,7 +909,7 @@
             <span class="radio"></span>
             <div>
               <div class="size-main">160 × 75 × 37 cm</div>
-              <div class="size-sub">2 Schubladen / 3 Türen</div>
+              <div class="size-sub">3 Schubladen / 3 Türen</div>
             </div>
             <div class="size-price">+20 €</div>
           </div>
@@ -550,7 +918,7 @@
             <span class="radio"></span>
             <div>
               <div class="size-main">180 × 75 × 37 cm</div>
-              <div class="size-sub">2 Schubladen / 4 Türen</div>
+              <div class="size-sub">4 Schubladen / 4 Türen</div>
             </div>
             <div class="size-price">+40 €</div>
           </div>
@@ -641,24 +1009,24 @@
         width: 120,
         drawers: 2,
         doors: 2,
-        drawerWidth: "ca. 55 cm",
-        doorWidth: "ca. 55 cm",
+        drawerWidth: "ca. 60 cm",
+        doorWidth: "ca. 60 cm",
         backendSize: "klein"
       },
       "160": {
         width: 160,
-        drawers: 2,
+        drawers: 3,
         doors: 3,
-        drawerWidth: "ca. 75 cm",
-        doorWidth: "ca. 49 cm",
+        drawerWidth: "ca. 53 cm",
+        doorWidth: "ca. 53 cm",
         backendSize: "mittel"
       },
       "180": {
         width: 180,
-        drawers: 2,
+        drawers: 4,
         doors: 4,
-        drawerWidth: "ca. 85 cm",
-        doorWidth: "ca. 42 cm",
+        drawerWidth: "ca. 45 cm",
+        doorWidth: "ca. 45 cm",
         backendSize: "gross"
       }
     };
@@ -799,28 +1167,46 @@
       const h = 210;
       const drawerH = 72;
       const doorH = h - drawerH;
+      const columns = variant.doors;
+      const columnW = w / columns;
 
       let html = `
-        <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${surface.fill}" stroke="${surface.stroke}" stroke-width="3" rx="3"/>
+        <filter id="frontShadow" x="-20%" y="-20%" width="140%" height="150%">
+          <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#0f172a" flood-opacity="0.16"/>
+        </filter>
+        <rect x="${x - 10}" y="${y + h + 17}" width="${w + 20}" height="16" rx="8" fill="rgba(15,23,42,.10)"/>
+        <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${surface.fill}" stroke="${surface.stroke}" stroke-width="3" rx="7" filter="url(#frontShadow)"/>
+        <rect x="${x + 10}" y="${y + 10}" width="${w - 20}" height="${h - 20}" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2" rx="5"/>
+        <line x1="${x}" y1="${y + drawerH}" x2="${x + w}" y2="${y + drawerH}" stroke="${surface.stroke}" stroke-width="3"/>
       `;
 
-      const drawerW = w / variant.drawers;
-      for (let i = 0; i < variant.drawers; i++) {
-        const dx = x + i * drawerW;
+      for (let i = 0; i < columns; i++) {
+        const dx = x + i * columnW;
+        const centerX = dx + columnW / 2;
+        const isLast = i === columns - 1;
+
         html += `
-          <rect x="${dx}" y="${y}" width="${drawerW}" height="${drawerH}" fill="transparent" stroke="${surface.stroke}" stroke-width="2"/>
-          <rect x="${dx + drawerW / 2 - 18}" y="${y + drawerH / 2 - 2}" width="36" height="4" rx="2" fill="${surface.handle}"/>
+          <rect x="${dx}" y="${y}" width="${columnW}" height="${drawerH}" fill="transparent" stroke="${surface.stroke}" stroke-width="2"/>
+          <rect x="${dx}" y="${y + drawerH}" width="${columnW}" height="${doorH}" fill="transparent" stroke="${surface.stroke}" stroke-width="2"/>
+          <rect x="${centerX - Math.min(22, columnW * 0.20)}" y="${y + drawerH / 2 - 2}" width="${Math.min(44, columnW * 0.40)}" height="4" rx="2" fill="${surface.handle}" opacity=".92"/>
+          <rect x="${centerX - 2}" y="${y + drawerH + doorH / 2 - 30}" width="4" height="60" rx="2" fill="${surface.handle}" opacity=".92"/>
+          <text x="${centerX}" y="${y - 12}" text-anchor="middle" font-size="12" font-weight="800" fill="#64748b">${Math.round(variant.width / columns)} cm</text>
         `;
+
+        if (!isLast) {
+          html += `
+            <line x1="${dx + columnW}" y1="${y - 5}" x2="${dx + columnW}" y2="${y + h + 5}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="5 5" opacity=".65"/>
+          `;
+        }
       }
 
-      const doorW = w / variant.doors;
-      for (let i = 0; i < variant.doors; i++) {
-        const dx = x + i * doorW;
-        html += `
-          <rect x="${dx}" y="${y + drawerH}" width="${doorW}" height="${doorH}" fill="transparent" stroke="${surface.stroke}" stroke-width="2"/>
-          <rect x="${dx + doorW / 2 - 2}" y="${y + drawerH + doorH / 2 - 32}" width="4" height="64" rx="2" fill="${surface.handle}"/>
-        `;
-      }
+      html += `
+        <rect x="${x + 22}" y="${y + h}" width="24" height="18" rx="3" fill="#111" opacity=".75"/>
+        <rect x="${x + w - 46}" y="${y + h}" width="24" height="18" rx="3" fill="#111" opacity=".75"/>
+        <text x="${x + w / 2}" y="${y + h + 50}" text-anchor="middle" font-size="13" font-weight="800" fill="#475569">
+          ${columns} gleich breite Module: oben ${columns} Schubladen, unten ${columns} Türen
+        </text>
+      `;
 
       group.innerHTML = html;
     }
@@ -836,11 +1222,34 @@
     function chooseSize(size) {
       config.size = size;
       updateAll();
+      pulseSelection();
     }
 
     function chooseSurface(surface) {
       config.surface = surface;
       updateAll();
+      pulseSelection();
+    }
+
+    function pulseSelection() {
+      const targets = [
+        document.querySelector(".config-card"),
+        document.querySelector(".details-card"),
+        document.getElementById("livePreis")
+      ].filter(Boolean);
+
+      targets.forEach(element => {
+        element.classList.remove("selection-flash", "price-bump");
+        void element.offsetWidth;
+      });
+
+      const configCard = document.querySelector(".config-card");
+      const detailsCard = document.querySelector(".details-card");
+      const price = document.getElementById("livePreis");
+
+      if (configCard) configCard.classList.add("selection-flash");
+      if (detailsCard) detailsCard.classList.add("selection-flash");
+      if (price) price.classList.add("price-bump");
     }
 
     function mapOldSize(dbSize, widthCm) {
