@@ -159,10 +159,7 @@ CREATE TABLE IF NOT EXISTS ai_cache (
 
 -- Mock Data für Accessories / Shop
 INSERT INTO accessories (name, preis, bild_url, beschreibung, category) VALUES
-('LED-Lichtleiste 120cm', 24.99, 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=300&h=200&fit=crop', 'Warmweiße LED-Leiste', 'Beleuchtung'),
-('Organizer-Einsatz Holz', 14.99, 'https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=300&h=200&fit=crop', 'Bambus Facheinteilung', 'Innenausstattung'),
-('Premium Kabeldurchführung', 7.99, 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=300&h=200&fit=crop', 'Aluminium', 'Elektronik'),
-('Filz-Einlage (Grau)', 9.99, 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=300&h=200&fit=crop', 'Schützt empfindliche Oberflächen', 'Schutz'),
-('Glasplatte (Maßanfertigung)', 39.99, 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300&h=200&fit=crop', 'Gehärtetes Glas als Deckplatte, 6mm', 'Oberfläche'),
-('Deko-Vase (Nordic)', 19.99, 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=300&h=200&fit=crop', 'Keramik in Weiß', 'Dekoration'),
-('Griffe "Klassik" (2er)', 12.99, 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300&h=200&fit=crop', 'Messing-Look', 'Griffe');
+
+('LED-Lichtleiste 120cm', 14.99, 'http://127.0.0.1:9000/sideboard/Ersatzteil_LED.png', 'LED-Leiste, Farben per Handy steuerbar', 'Beleuchtung'),
+('Soft Close Daempfer', 7.99, 'http://127.0.0.1:9000/sideboard/Ersatzteil_Soft-Close-Daempfer.png', 'Zum einfachen Schliessen von Schraenken', 'Zubehör'),
+('Schraubenset', 9.99, 'http://127.0.0.1:9000/sideboard/Ersatzteil_Schraubenset.png', 'Ersatz Schrauben, falls Schrauben fehlen', 'Zubehör');
