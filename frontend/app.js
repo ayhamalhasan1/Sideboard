@@ -7,6 +7,34 @@ const API = window.API;
 window.MINIO_URL = "http://127.0.0.1:9000/sideboard";  // MinIO Base URL
 const MINIO_URL = window.MINIO_URL;
 
+// Statische Medien für Hero-Slideshow (Fallback)
+const mediaSlideUrls = [
+    "http://127.0.0.1:9000/sideboard/hero_sideboard.png",
+    "http://127.0.0.1:9000/sideboard/holzoptik-120.jpg",
+    "http://127.0.0.1:9000/sideboard/schwarz-matt-120.jpg"
+  ];
+
+   function initHeroSlideshow() {
+      const slideImage = document.getElementById("slideImage");
+      const slideCounter = document.getElementById("slideCounter");
+      const prevBtn = document.querySelector(".slide-btn.prev");
+      const nextBtn = document.querySelector(".slide-btn.next");
+      let currentIndex = 0;
+      const slides = [...mediaSlideUrls];
+
+      const updateSlide = (index) => {
+        if (index < 0) index = slides.length - 1;
+        if (index >= slides.length) index = 0;
+        currentIndex = index;
+        slideImage.src = slides[currentIndex];
+        slideCounter.textContent = `${currentIndex + 1} / ${slides.length}`;
+      };
+
+      prevBtn.addEventListener("click", () => updateSlide(currentIndex - 1));
+      nextBtn.addEventListener("click", () => updateSlide(currentIndex + 1));
+    }
+
+
 // 3. Layout Injizieren
 async function injectLayout() {
 
@@ -50,6 +78,7 @@ async function injectLayout() {
   });
 
   updateCartBadge();
+  initHeroSlideshow();
 }
 
 
