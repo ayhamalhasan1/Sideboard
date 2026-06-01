@@ -49,22 +49,23 @@ Cloud-native Webanwendung zum individuellen Konfigurieren und Kaufen eines Sideb
 │               (Routing nach Pfad-Präfix)                            │
 └──────┬──────────┬──────────┬──────────┬──────────┬─────────────────┘
        │          │          │          │          │
-  /api/shop  /api/cart  /api/config /api/media  /api/ai
+  /api/shop  /api/cart  /api/config  /api/ai  /api/community
        │          │          │          │          │
-┌──────▼──┐ ┌────▼────┐ ┌───▼───┐ ┌───▼───┐ ┌───▼────────────────┐
-│  LB     │ │  LB     │ │  LB   │ │  LB   │ │       LB           │
-│  Shop   │ │  Cart   │ │ Conf. │ │ Media │ │       AI           │
-└──────┬──┘ └────┬────┘ └───┬───┘ └───┬───┘ └───┬────────────────┘
-       │          │          │          │          │
-┌──────▼──┐ ┌────▼────┐ ┌───▼───┐ ┌───▼───┐ ┌───▼───────────────┐
-│  Shop   │ │  Cart   │ │Config.│ │ Media │ │ AI Recommendation │
-│ Service │ │ Service │ │Service│ │Service│ │    Service        │
-│         │ │         │ │       │ │       │ │         │         │
-│ MySQL   │ │ MySQL   │ │ MySQL │ │ MySQL │ │ MySQL   ▼         │
-│ (Prod.) │ │ (Cart)  │ │+ MinIO│ │+ MinIO│ │  AI Cache Service │
-│ MySQL   │ │         │ │       │ │       │ │  (REST API+MySQL)  │
-│ (Rev.)  │ │         │ │       │ │       │ │                   │
-└─────────┘ └─────────┘ └───────┘ └───────┘ └───────────────────┘
+┌──────▼──┐ ┌────▼────┐ ┌───▼───┐ ┌───▼─────────┐ ┌───▼────────────┐
+│  LB     │ │  LB     │ │  LB   │ │     LB      │ │      LB        │
+│  Shop   │ │  Cart   │ │ Conf. │ │     AI      │ │   Community    │
+└──────┬──┘ └────┬────┘ └───┬───┘ └───┬────────┘ └───┬───────────┘
+       │          │          │          │              │
+┌──────▼──┐ ┌────▼────┐ ┌───▼───┐ ┌───▼──────────┐ ┌──▼──────────────┐
+│  Shop   │ │  Cart   │ │Config.│ │     AI       │ │   Community     │
+│ Service │ │ Service │ │Service│ │ Recommend.  │ │ Feature Service │
+│         │ │         │ │       │ │   Service   │ │       +         │
+│ MySQL   │ │ MySQL   │ │ MySQL │ │     │       │ │   MinIO (Media) │
+│ (Prod.) │ │ (Cart)  │ │+ MinIO│ │ MySQL ▼     │ │       +         │
+│ MySQL   │ │         │ │       │ │ AI Cache    │ │      MySQL      │
+│ (Rev.)  │ │         │ │       │ │ Service     │ │                 │
+│         │ │         │ │       │ │(REST API)   │ │                 │
+└─────────┘ └─────────┘ └───────┘ └─────────────┘ └─────────────────┘
 ```
 
 ---
@@ -89,19 +90,7 @@ Cloud-native Webanwendung zum individuellen Konfigurieren und Kaufen eines Sideb
 ## Projektstruktur
 
 ```
-Sideboard implementierung/
-│
-├── backend/                          # Monolithisches Backend (Original, unveränderter Referenzstand)
-│   ├── server.js                     # Express-Hauptdatei
-│   ├── init.sql                      # Datenbank-Schema + Testdaten
-│   ├── Dockerfile
-│   ├── routes/
-│   │   ├── shop.js                   # Zubehör-Shop (MySQL)
-│   │   ├── cart.js                   # Warenkorb
-│   │   ├── config.js                 # Sideboard-Konfigurator
-│   │   ├── ai.js                     # Gemini KI-Berater
-│   │   └── reviews.js                # Produktbewertungen
-│   └── minio-init/                   # MinIO Bucket-Initialisierung
+Sideboard/
 │
 ├── services/                         # Microservices-Architektur
 │   ├── api-gateway/                  # Routing-Gateway (Port 3000)
@@ -109,17 +98,16 @@ Sideboard implementierung/
 │   ├── shop-service/                 # Shop + Reviews (Port 3001)
 │   ├── cart-service/                 # Warenkorb (Port 3002)
 │   ├── configurator-service/         # Konfigurator (Port 3003)
-│   ├── media-service/                # Medien (Port 3004)
-│   ├── ai-recommendation-service/    # KI-Berater (Port 3005)
-│   └── ai-cache-service/             # KI-Cache REST API (Port 3006)
+│   ├── ai-service/                   # KI-Berater (Port 3005)
+│   └── community-feature-service/    # Community (Port 3006)
 │
 ├── load-balancers/                   # Nginx-LB-Konfigurationen
 │   ├── lb-manufacturer/nginx.conf
 │   ├── lb-shop/nginx.conf
 │   ├── lb-cart/nginx.conf
 │   ├── lb-configurator/nginx.conf
-│   ├── lb-media/nginx.conf
-│   └── lb-ai/nginx.conf
+│   ├── lb-ai/nginx.conf
+│   └── lb-community/nginx.conf
 │
 ├── frontend/                         # HTML5-Frontend
 │   ├── Dockerfile                    # Nginx-Container
@@ -134,12 +122,18 @@ Sideboard implementierung/
 │   ├── berater.html                  # KI-Berater
 │   └── profil.html                   # Benutzerprofil
 │
+├── infrastructure/                   # Initialisierungsskripte
+│   ├── db-init/
+│   │   └── init.sql                  # Datenbank-Schema + Testdaten
+│   └── minio-init/
+│       ├── Dockerfile
+│       └── init-minio.sh
+│
 ├── assets/                           # Produktbilder für MinIO
-├── db/
-│   └── init.sql                      # Gemeinsames Datenbank-Schema
 ├── docker-compose.yml                # Microservices-Betrieb (Standard)
-├── docker-compose.legacy-monolith.yml # Monolithischer Betrieb (Archiviert & Isoliert)
-└── .env                              # Umgebungsvariablen
+├── .env                              # Umgebungsvariablen
+├── .env.example                      # Umgebungsvariablen (Template)
+└── README.md                         # Diese Datei
 ```
 
 ---
@@ -155,7 +149,7 @@ Sideboard implementierung/
 
 ```bash
 git clone <repository-url>
-cd "Sideboard implementierung"
+cd Sideboard
 ```
 
 ### 2. Umgebungsvariablen einrichten
@@ -183,13 +177,13 @@ docker compose up --build
 | URL | Beschreibung |
 |---|---|
 | [http://localhost:8080](http://localhost:8080) | Frontend (Startseite) |
-| [http://localhost:9001](http://localhost:9001) | MinIO Admin-Konsole |
+| [http://localhost:9000](http://localhost:9000) | MinIO Admin-Konsole |
 
 ---
 
 ## Betriebsmodi
 
-### Modus 1: Microservices-Architektur (`docker-compose.yml`) — [STANDARD]
+### Microservices-Architektur (`docker-compose.yml`)
 
 Das gesamte System läuft als hochskalierbares, serviceorientiertes System.
 
@@ -207,23 +201,6 @@ Stoppen und Daten löschen:
 ```bash
 docker compose down -v
 ```
-
----
-
-### Modus 2: Monolith (`docker-compose.legacy-monolith.yml`) — [ARCHIVIERT & ISOLIERT]
-
-> [!CAUTION]
-> Der monolithische Betrieb wurde in eine eigene Archiv-Datei verschoben und ist vollständig isoliert. Er dient ausschließlich als historischer Referenzstand.
-> 
-> Starten bei Bedarf:
-> ```bash
-> docker compose -f docker-compose.legacy-monolith.yml up --build
-> ```
-> 
-> Stoppen und Daten löschen:
-> ```bash
-> docker compose -f docker-compose.legacy-monolith.yml down -v
-> ```
 
 ---
 
@@ -254,8 +231,8 @@ docker compose down -v
 | `/api/reviews/*` | `lb-shop` | shop-service |
 | `/api/cart/*` | `lb-cart` | cart-service |
 | `/api/config/*` | `lb-configurator` | configurator-service |
-| `/api/media/*` | `lb-media` | media-service |
-| `/api/ai/*` | `lb-ai` | ai-recommendation-service |
+| `/api/ai/*` | `lb-ai` | ai-service |
+| `/api/community/*` | `lb-community` | community-feature-service |
 
 ### Shop Information Service (`shop-service`)
 - **Port:** 3001
@@ -277,25 +254,18 @@ docker compose down -v
   - Picture Store → MySQL (Metadaten) + MinIO (Bilddateien)
 - **Routen:** `/api/config`, `/api/config/saved`
 
-### Media Service (`media-service`)
-- **Port:** 3004
-- **Datenbanken:**
-  - Media DB → MySQL (`media_files`-Tabelle, Metadaten)
-  - Media Store → MySQL (Metadaten) + MinIO (Binärdateien)
-- **Routen:** `/api/media/assets`, `/api/media/upload`
-
-### AI Recommendation Service (`ai-recommendation-service`)
+### AI Recommendation Service (`ai-service`)
 - **Port:** 3005
-- **Aufgabe:** Liest aktuelle Konfiguration und Warenkorb aus MySQL, baut den Prompt, ruft Google Gemini auf. Cache-Prüfung und -Speicherung erfolgen via REST-API beim AI Cache Service.
+- **Aufgabe:** Liest aktuelle Konfiguration und Warenkorb aus MySQL, baut den Prompt, ruft Google Gemini auf. Cache-Speicherung erfolgt direkt in der MySQL-Datenbank.
 - **Routen:** `/api/ai/advice`
 
-### AI Cache Service (`ai-cache-service`)
-- **Port:** 3006 (intern, nur vom AI Recommendation Service erreichbar)
-- **Datenbank:** MySQL (`ai_cache`-Tabelle, TTL: 1 Tag)
-- **REST-Endpunkte:**
-  - `GET /cache/:hash` — Cache-Eintrag prüfen
-  - `POST /cache` — Neue Antwort speichern
-  - `DELETE /cache/expired` — Abgelaufene Einträge bereinigen
+### Community Feature Service (`community-feature-service`)
+- **Port:** 3006
+- **Datenbanken:**
+  - Community DB → MySQL (`community_projects`-Tabelle, Benutzer-Entwürfe)
+  - Community Bilder → MinIO + MySQL (Metadaten)
+- **Routen:** `/api/community`, `/api/community/:id`, `/api/community/upload`, `/api/community/:id/like`
+- **Features:** Benutzer können ihre Sideboard-Konfigurationen als Entwürfe teilen, Bilder hochladen, andere Entwürfe bewerten/liken
 
 ---
 
@@ -347,23 +317,21 @@ Alle Anfragen gehen über: `http://localhost:8080/api/`
 | Methode | Pfad | Beschreibung |
 |---|---|---|
 | `POST` | `/api/ai/advice` | Einrichtungstipp (`{ type: "styling"\|"deco"\|"color" }`) |
-
-### Medien
+### Community — Benutzer-Entwürfe
 
 | Methode | Pfad | Beschreibung |
 |---|---|---|
-| `GET` | `/api/media/assets` | Alle Medien (Metadaten aus MySQL) |
-| `GET` | `/api/media/assets/:id` | Einzeldatei + Presigned MinIO-URL |
-| `POST` | `/api/media/upload` | Datei registrieren + Upload-URL erhalten |
-| `DELETE` | `/api/media/assets/:id` | Datei löschen (MinIO + MySQL) |
-
+| `GET` | `/api/community` | Alle Community-Projekte |
+| `GET` | `/api/community/:id` | Einzelnes Projekt laden |
+| `POST` | `/api/community` | Neues Projekt hochladen (`{ title, description, config_json, image_url }`) |
 ### Health Checks
 
 Jeder Microservice stellt einen Health-Endpoint bereit:
 
 ```
-GET /api/health        → shop-service, cart-service, configurator-service, media-service
+GET /api/health        → shop-service, cart-service, configurator-service
 GET /api/ai/health     → ai-recommendation-service
+GET /api/community/health → community-feature-service
 GET /health            → ai-cache-service
 ```
 
@@ -380,14 +348,12 @@ Alle Daten liegen in einer gemeinsamen MySQL-Instanz (`sideboard_db`). Die Tabel
 | `cart_items` | cart-service | Warenkorb-Einträge pro Session |
 | `configurations` | configurator-service | Aktive Sideboard-Konfigurationen |
 | `saved_sideboards` | configurator-service | Gespeicherte Favoriten (auth) |
-| `media_files` | media-service | Mediendatei-Metadaten |
-| `configurator_pictures` | configurator-service | Bild-Metadaten für Konfigurationen |
+| `community_designs` | community-feature-service | Benutzer-Entwürfe für Community |
 | `orders` | cart-service | Abgeschlossene Bestellungen |
 | `order_items` | cart-service | Bestellpositionen |
 | `users` | — | Benutzerkonten |
 | `addresses` | — | Lieferadressen |
-| `ai_cache` | ai-cache-service | Cache für Gemini-Antworten (TTL: 1 Tag) |
-| `sessions` | alle Services | Geteilter MySQL-Session-Store |
+| `ai_cache` | ai-service | Cache für Gemini-Antworten (TTL: 1 Tag) |
 
 ### Preisberechnung Sideboard
 
@@ -432,9 +398,8 @@ Jeder Service hat eine eigene `.env.example`-Datei mit allen benötigten Variabl
 | `DB_PASSWORD` | MySQL-Passwort |
 | `DB_NAME` | Datenbankname (`sideboard_db`) |
 | `SESSION_SECRET` | Muss überall gleich sein |
-| `GEMINI_API_KEY` | Nur in `ai-recommendation-service` |
-| `MINIO_HOST` | Nur in `configurator-service` und `media-service` |
-| `AI_CACHE_SERVICE_URL` | Nur in `ai-recommendation-service` |
+| `GEMINI_API_KEY` | Nur in `ai-service` |
+| `MINIO_HOST` | Nur in `configurator-service` und `community-feature-service` |
 
 ---
 
@@ -445,7 +410,7 @@ Jeder Microservice kann unabhängig horizontal skaliert werden. Der vorgeschalte
 ### Beispiel: Cart-Service auf 3 Instanzen skalieren
 
 ```bash
-docker compose -f docker-compose.microservices.yml up --build --scale cart-service=3
+docker compose up --build --scale cart-service=3
 ```
 
 Der `lb-cart`-Container leitet Anfragen dann reihum an alle drei Instanzen weiter.
@@ -462,7 +427,7 @@ MinIO dient als S3-kompatibler Objektspeicher für **Binärdateien** (Bilder, Me
 
 | | |
 |---|---|
-| URL | [http://localhost:9001](http://localhost:9001) |
+| URL | [http://localhost:9000](http://localhost:9000) |
 | Benutzer | `minioadmin` |
 | Passwort | `minioadmin` |
 | Bucket | `sideboard` |
@@ -470,8 +435,8 @@ MinIO dient als S3-kompatibler Objektspeicher für **Binärdateien** (Bilder, Me
 ### Neue Produktbilder hinzufügen
 
 1. Bilddatei in `assets/` ablegen (z. B. `neues-produkt.jpg`)
-2. `docker compose ... down && docker compose ... up --build` — der `minio-init`-Container lädt alle Assets automatisch hoch
-3. In `backend/init.sql` die `bild_url` für den Artikel aktualisieren:
+2. `docker compose down -v && docker compose up --build` — der `minio-init`-Container lädt alle Assets automatisch hoch
+3. In `infrastructure/db-init/init.sql` die `bild_url` für den Artikel aktualisieren:
    ```sql
    INSERT INTO accessories (name, preis, bild_url, ...)
    VALUES ('Neues Produkt', 29.99, 'neues-produkt.jpg', ...);
@@ -496,4 +461,3 @@ const bildUrl = `${window.MINIO_URL}/${accessory.bild_url}`;
 - **Authentifizierung:** Das Login-System ist als Grundgerüst implementiert; kein vollständiger Auth-Flow mit JWT oder OAuth.
 - **Checkout-Zahlung:** Bestellungen werden als `Rechnung_Mock` gespeichert; keine echte Zahlungsanbindung (Stripe-Felder sind in der DB vorbereitet).
 - **KI ohne API Key:** Der Gemini-Berater antwortet mit HTTP 503, wenn kein gültiger `GEMINI_API_KEY` gesetzt ist — alle anderen Features funktionieren weiterhin.
-- **ai-service/:** Der ältere `services/ai-service/`-Ordner ist ein veralteter Stand und wird von `ai-recommendation-service/` ersetzt. Er kann gelöscht werden.
