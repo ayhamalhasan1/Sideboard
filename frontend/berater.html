@@ -6,32 +6,198 @@
   <title>Sideboard Konfigurator | KI Berater</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    .chat-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .chat-intro {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 1.5rem;
+    }
+    .chat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .chat-chip {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      color: var(--text-dark);
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .chat-chip:hover {
+      border-color: var(--ikea-blue);
+      color: var(--ikea-blue);
+      transform: translateY(-1px);
+    }
+    .chat-window {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      height: 560px;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: var(--ikea-blue);
+      color: var(--bg-white);
+      padding: 1.1rem 1.5rem;
+      font-weight: 800;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .chat-header .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--ikea-yellow);
+      box-shadow: 0 0 0 4px rgba(251, 217, 20, 0.25);
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      background: var(--bg-light);
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+    .msg {
+      max-width: 78%;
+      padding: 0.8rem 1.1rem;
+      border-radius: 18px;
+      line-height: 1.5;
+      font-size: 0.97rem;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+    .msg.ai {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+    .msg.user {
+      background: var(--ikea-blue);
+      color: var(--bg-white);
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.cached-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      display: block;
+    }
+    .typing {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .typing span {
+      width: 7px;
+      height: 7px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+    .chat-input-bar {
+      display: flex;
+      gap: 0.7rem;
+      padding: 1rem;
+      background: var(--bg-white);
+      border-top: 1px solid var(--border);
+    }
+    .chat-input-bar textarea {
+      flex: 1;
+      resize: none;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      max-height: 120px;
+      transition: border-color 0.2s;
+    }
+    .chat-input-bar textarea:focus {
+      outline: none;
+      border-color: var(--ikea-blue);
+    }
+    .chat-send {
+      background: var(--ikea-blue);
+      color: var(--bg-white);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0 1.4rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .chat-send:hover { background: #004581; }
+    .chat-send:active { transform: scale(0.97); }
+    .chat-send:disabled {
+      background: var(--border);
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+    @media (max-width: 600px) {
+      .chat-window { height: 70vh; }
+      .msg { max-width: 88%; }
+    }
+  </style>
 </head>
 <body>
   <main>
-    <div style="margin-bottom: 2rem;">
+    <div style="margin-bottom: 1.5rem;">
       <a href="index.html" style="color: var(--text-muted); text-decoration: none;">&larr; Zurück</a>
     </div>
 
-    <div class="ai-advisor">
-      <h1 class="page-title">Raum-Berater</h1>
-      <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
-        Unsere KI analysiert deine Sideboard-Konfiguration und hilft bei der Entscheidung.
-      </p>
+    <div class="chat-wrap">
+      <h1 class="page-title" style="text-align: center; margin-bottom: 0.5rem;">KI Berater</h1>
+      <p class="chat-intro">Stelle Fragen zu Größen, Farben, Materialien, Zubehör oder dem Bestellprozess.</p>
 
-      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">
-        <button class="btn-secondary" onclick="holeBeraterTipp('styling')">Styling & Farben</button>
-        <button class="btn-secondary" onclick="holeBeraterTipp('deco')">Dekorationsideen</button>
-        <button class="btn-secondary" onclick="holeBeraterTipp('room_layout')">Raumaufteilung</button>
+      <div class="chat-chips" id="chatChips">
+        <button class="chat-chip" data-q="Welche Größen gibt es und was kosten sie?">Größen &amp; Preise</button>
+        <button class="chat-chip" data-q="Welches Sideboard passt für eine 3 Meter lange Wand?">Größenempfehlung</button>
+        <button class="chat-chip" data-q="Welches Zubehör habt ihr im Shop?">Zubehör</button>
+        <button class="chat-chip" data-q="Welche Farben und Materialien sind verfügbar?">Farben &amp; Materialien</button>
       </div>
 
-      <div class="ai-bubble" id="beraterAntwort" style="display: none;">
-        <div style="display: flex; gap: 1rem; align-items: flex-start;">
-          <div style="font-size: 2rem; background: var(--bg-light); border-radius: 50%; padding: 0.5rem;">💡</div>
-          <div>
-            <p id="beraterText" style="line-height: 1.6;"></p>
-            <span class="ai-source" id="beraterQuelle"></span>
-          </div>
+      <div class="chat-window">
+        <div class="chat-header">
+          <span class="dot"></span>
+          <span>Sideboard Assistant</span>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg ai">Hallo! Ich bin der KI-Berater der Sideboard-Manufaktur. Frag mich nach Größen, Farben, Materialien oder unserem Zubehör – ich helfe dir bei der Konfiguration. 🛋️</div>
+        </div>
+        <div class="chat-input-bar">
+          <textarea id="chatInput" rows="1" placeholder="Schreibe deine Frage..."></textarea>
+          <button class="chat-send" id="chatSend" onclick="sendMessage()">Senden</button>
         </div>
       </div>
     </div>
@@ -39,35 +205,92 @@
 
   <script src="app.js"></script>
   <script>
-    async function holeBeraterTipp(type) {
-      const antwortDiv = document.getElementById("beraterAntwort");
-      const beraterText = document.getElementById("beraterText");
-      const beraterQuelle = document.getElementById("beraterQuelle");
+    const chatMessages = document.getElementById("chatMessages");
+    const chatInput = document.getElementById("chatInput");
+    const chatSend = document.getElementById("chatSend");
+    const history = [];
+    let isSending = false;
 
-      beraterText.textContent = "Analysiere Konfiguration und generiere Tipp...";
-      beraterQuelle.textContent = "";
-      antwortDiv.style.display = "block";
+    document.querySelectorAll(".chat-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        chatInput.value = btn.dataset.q;
+        chatInput.focus();
+      });
+    });
+
+    chatInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    chatInput.addEventListener("input", () => {
+      chatInput.style.height = "auto";
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + "px";
+    });
+
+    function appendMessage(role, text, cached) {
+      const div = document.createElement("div");
+      div.className = "msg " + (role === "user" ? "user" : "ai");
+      div.textContent = text;
+      if (cached) {
+        const hint = document.createElement("span");
+        hint.className = "cached-hint";
+        hint.textContent = "Aus dem Cache geladen";
+        div.appendChild(hint);
+      }
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return div;
+    }
+
+    function appendTyping() {
+      const div = document.createElement("div");
+      div.className = "msg ai";
+      div.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return div;
+    }
+
+    async function sendMessage() {
+      if (isSending) return;
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      isSending = true;
+      chatSend.disabled = true;
+      appendMessage("user", text);
+      chatInput.value = "";
+      chatInput.style.height = "auto";
+
+      const typingEl = appendTyping();
 
       try {
-        const antwort = await fetch(`${API}/ai/advice`, {
+        const res = await fetch(`${API}/ai/advice`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ type })
+          body: JSON.stringify({ type: text }),
         });
+        const data = await res.json();
+        typingEl.remove();
 
-        const daten = await antwort.json();
-
-        if (daten.fehler) {
-          beraterText.textContent = daten.fehler;
+        if (data.fehler) {
+          appendMessage("ai", "⚠️ " + data.fehler);
         } else {
-          beraterText.textContent = daten.advice;
-          beraterQuelle.textContent = daten.cached 
-            ? "Antwort aus dem Cache geladen (Sofort)" 
-            : "Live generiert von Gemini AI";
+          appendMessage("ai", data.advice, data.cached);
+          history.push({ role: "user", text });
+          history.push({ role: "model", text: data.advice });
+          if (history.length > 20) history.splice(0, history.length - 20);
         }
       } catch (err) {
-        beraterText.textContent = "Netzwerkfehler.";
+        typingEl.remove();
+        appendMessage("ai", "⚠️ Netzwerkfehler. Bitte erneut versuchen.");
+      } finally {
+        isSending = false;
+        chatSend.disabled = false;
+        chatInput.focus();
       }
     }
   </script>
