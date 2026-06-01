@@ -19,7 +19,6 @@ const loadBalancers = {
   shop:         process.env.LB_SHOP_URL         || "http://lb-shop:80",
   cart:         process.env.LB_CART_URL         || "http://lb-cart:80",
   configurator: process.env.LB_CONFIGURATOR_URL || "http://lb-configurator:80",
-  media:        process.env.LB_MEDIA_URL        || "http://lb-media:80",
   ai:           process.env.LB_AI_URL           || "http://lb-ai:80",
   community:    process.env.LB_COMMUNITY_URL    || "http://lb-community:80",
 };
@@ -44,7 +43,6 @@ app.use(proxy("/api/shop",    loadBalancers.shop));
 app.use(proxy("/api/reviews", loadBalancers.shop));       // reviews hosted in shop-service
 app.use(proxy("/api/cart",    loadBalancers.cart));
 app.use(proxy("/api/config",  loadBalancers.configurator));
-app.use(proxy("/api/media",   loadBalancers.media));
 app.use(proxy("/api/ai",      loadBalancers.ai));
 app.use(proxy("/api/community", loadBalancers.community));
 

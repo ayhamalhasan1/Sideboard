@@ -150,29 +150,6 @@ services:
       redis:
         condition: service_healthy
 
-  media-service:
-    build: ./services/media-service
-    container_name: sideboard-media
-    restart: always
-    ports:
-      - "3004:3004"
-    environment:
-      PORT: 3004
-      DB_HOST: mysql
-      DB_USER: root
-      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-sideboard123}
-      DB_NAME: sideboard_db
-      MINIO_HOST: minio
-      MINIO_PORT: 9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      MINIO_BUCKET: sideboard
-    depends_on:
-      minio:
-        condition: service_healthy
-      mysql:
-        condition: service_healthy
-
   ai-recommendation-service:
     build: ./services/ai-service
     container_name: sideboard-ai
@@ -241,14 +218,12 @@ services:
       LB_SHOP_URL: http://lb-shop:80
       LB_CART_URL: http://lb-cart:80
       LB_CONFIGURATOR_URL: http://lb-configurator:80
-      LB_MEDIA_URL:        http://lb-media:80
       LB_AI_URL:           http://lb-ai:80
       LB_COMMUNITY_URL:    http://lb-community:80
     depends_on:
       - lb-shop
       - lb-cart
       - lb-configurator
-      - lb-media
       - lb-ai
       - lb-community
 
@@ -305,15 +280,6 @@ services:
       - ./load-balancers/lb-configurator/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - configurator-service
-
-  lb-media:
-    image: nginx:alpine
-    container_name: sideboard-lb-media
-    restart: always
-    volumes:
-      - ./load-balancers/lb-media/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - media-service
 
   lb-ai:
     image: nginx:alpine
