@@ -134,7 +134,7 @@
     async function removeFromCart(itemId) {
       // Optimistic delete
       const previousItems = [...currentItems];
-      currentItems = currentItems.filter(item => item.id !== itemId);
+      currentItems = currentItems.filter(item => String(item.id) !== String(itemId));
       renderCart();
 
       try {
@@ -154,7 +154,7 @@
 
       // Optimistic update
       const previousItems = currentItems.map(item => ({ ...item }));
-      const item = currentItems.find(item => item.id === itemId);
+      const item = currentItems.find(item => String(item.id) === String(itemId));
       if (item) {
         item.menge = parsedMenge;
       }

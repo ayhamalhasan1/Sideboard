@@ -28,7 +28,7 @@ services:
       - mysql_data:/var/lib/mysql
       - ./infrastructure/db-init/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-sideboard123}"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-sideboard123}" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -40,7 +40,7 @@ services:
     ports:
       - "6380:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -53,13 +53,13 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER:     ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -164,7 +164,7 @@ services:
       DB_NAME: sideboard_db
       MINIO_HOST: minio
       MINIO_PORT: 9000
-      MINIO_ROOT_USER:     ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
       MINIO_BUCKET: sideboard
     depends_on:
@@ -238,8 +238,8 @@ services:
       - "3000:3000"
     environment:
       PORT: 3000
-      LB_SHOP_URL:         http://lb-shop:80
-      LB_CART_URL:         http://lb-cart:80
+      LB_SHOP_URL: http://lb-shop:80
+      LB_CART_URL: http://lb-cart:80
       LB_CONFIGURATOR_URL: http://lb-configurator:80
       LB_MEDIA_URL:        http://lb-media:80
       LB_AI_URL:           http://lb-ai:80
