@@ -267,11 +267,11 @@
       const typingEl = appendTyping();
 
       try {
-        const res = await fetch(`${API}/ai/advice`, {
+        const res = await fetch(`${API}/ai/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ type: text }),
+          body: JSON.stringify({ message: text, history }),
         });
         const data = await res.json();
         typingEl.remove();
@@ -279,9 +279,9 @@
         if (data.fehler) {
           appendMessage("ai", "⚠️ " + data.fehler);
         } else {
-          appendMessage("ai", data.advice, data.cached);
+          appendMessage("ai", data.reply, data.cached);
           history.push({ role: "user", text });
-          history.push({ role: "model", text: data.advice });
+          history.push({ role: "model", text: data.reply });
           if (history.length > 20) history.splice(0, history.length - 20);
         }
       } catch (err) {

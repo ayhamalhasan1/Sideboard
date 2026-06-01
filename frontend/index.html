@@ -19,8 +19,19 @@
         </div>
       </div>
       <div class="hero-image">
-        <img src="http://127.0.0.1:9000/sideboard/hero_sideboard.png" alt="Elegantes weißes Sideboard in modernem Wohnzimmer">
+        <div class="hero-slideshow">
+          <button class="slide-btn prev" type="button" aria-label="Vorheriges Bild">‹</button>
+          <div class="slide-frame">
+            <img id="slideImage" src="http://127.0.0.1:9000/sideboard/hero_sideboard.png" alt="Sideboard Produktbild">
+            <div class="slide-counter" id="slideCounter">1 / 3</div>
+          </div>
+          <button class="slide-btn next" type="button" aria-label="Nächstes Bild">›</button>
+        </div>
       </div>
+    </div>
+
+    <div class="hero-video" style="margin: 2rem auto 0; max-width: 560px;">
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/p41qFmBnsbI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
     </div>
 
     <div class="feature-grid">
@@ -74,5 +85,69 @@
   </main>
 
   <script src="app.js"></script>
+  <script>
+    const mediaSlideUrls = [
+      "http://127.0.0.1:9000/sideboard/hero_sideboard.png",
+      "http://127.0.0.1:9000/sideboard/holzoptik-120.jpg",
+      "http://127.0.0.1:9000/sideboard/schwarz-matt-120.jpg"
+    ];
+
+    async function loadMediaServiceSlides() {
+      try {
+        const res = await fetch(`${window.API}/media/assets`);
+        if (!res.ok) throw new Error("Media-Service nicht verfügbar");
+
+        const assets = await res.json();
+        const imageAssets = assets.filter(asset => asset.content_type?.startsWith("image/"));
+        if (!imageAssets.length) return false;
+
+        const urls = await Promise.all(imageAssets.slice(0, 5).map(async asset => {
+          const res = await fetch(`${window.API}/media/assets/${asset.id}`);
+          if (!res.ok) return null;
+          const data = await res.json();
+          return data.url;
+        }));
+
+        const validUrls = urls.filter(Boolean);
+        if (validUrls.length) {
+          mediaSlideUrls.splice(0, mediaSlideUrls.length, ...validUrls);
+          return true;
+        }
+      } catch (err) {
+        console.warn("Media-Service Slideshow nicht geladen:", err);
+      }
+      return false;
+    }
+
+    function initHeroSlideshow() {
+      const slideImage = document.getElementById("slideImage");
+      const slideCounter = document.getElementById("slideCounter");
+      const prevBtn = document.querySelector(".slide-btn.prev");
+      const nextBtn = document.querySelector(".slide-btn.next");
+      let currentIndex = 0;
+      const slides = [...mediaSlideUrls];
+
+      const updateSlide = (index) => {
+        if (index < 0) index = slides.length - 1;
+        if (index >= slides.length) index = 0;
+        currentIndex = index;
+        slideImage.src = slides[currentIndex];
+        slideCounter.textContent = `${currentIndex + 1} / ${slides.length}`;
+      };
+
+      prevBtn.addEventListener("click", () => updateSlide(currentIndex - 1));
+      nextBtn.addEventListener("click", () => updateSlide(currentIndex + 1));
+
+      loadMediaServiceSlides().then((hasMedia) => {
+        if (hasMedia) {
+          slides.length = 0;
+          slides.push(...mediaSlideUrls);
+        }
+        updateSlide(0);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", initHeroSlideshow);
+  </script>
 </body>
 </html>
