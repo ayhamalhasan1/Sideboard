@@ -9,6 +9,47 @@ function getAuthDetails(req) {
   return { field: "session_id", value: req.sessionID };
 }
 
+function parseSideboardItemId(id) {
+  const match = /^sideboard-(\d+)$/.exec(String(id));
+  return match ? Number(match[1]) : null;
+}
+
+function calculateSideboardPrice(config) {
+  const basePrice = config.groesse === "gross" ? 399 : config.groesse === "mittel" ? 299 : 199;
+  const matPrice = config.material === "Metall" ? 50 : config.material === "Glas" ? 100 : 0;
+  const finishPrice = config.finish === "glänzend" || config.finish === "glÃ¤nzend" ? 30 : 0;
+  return basePrice + matPrice + finishPrice;
+}
+
+function sideboardImageName(config) {
+  const sizeByName = { klein: 120, mittel: 160, gross: 180 };
+  const width = Number(config.width_cm) || sizeByName[config.groesse] || 120;
+  const color = String(config.farbe || "weiss").toLowerCase();
+  const finish = String(config.finish || "matt").toLowerCase();
+  const isGlossy = finish !== "matt";
+
+  let surface = "weiss-matt";
+  if (color === "eiche" || color === "holzoptik") {
+    surface = "holzoptik";
+  } else if (color === "schwarz") {
+    surface = isGlossy ? "schwarz-hochglanz" : "schwarz-matt";
+  } else {
+    surface = isGlossy ? "weiss-hochglanz" : "weiss-matt";
+  }
+
+  return `${surface}-${width}.jpg`;
+}
+
+function sideboardCartItem(config) {
+  return {
+    id: `sideboard-${config.id}`,
+    menge: config.menge || 1,
+    name: `Sideboard (Größe: ${config.groesse}, Farbe: ${config.farbe}, Material: ${config.material}, Finish: ${config.finish})`,
+    preis: calculateSideboardPrice(config),
+    bild_url: sideboardImageName(config),
+  };
+}
+
 // ─── GET /api/cart ────────────────────────────────────────────────────────────
 router.get("/", async (req, res) => {
   const db = req.app.locals.db;
@@ -27,23 +68,11 @@ router.get("/", async (req, res) => {
 
     // Sideboard config from configurations table
     const [konfigs] = await db.query(
-      `SELECT * FROM configurations WHERE ${field} = ? ORDER BY aktualisiert_am DESC LIMIT 1`,
+      `SELECT * FROM configurations WHERE ${field} = ? ORDER BY aktualisiert_am DESC`,
       [value]
     );
 
-    if (konfigs.length > 0) {
-      const k = konfigs[0];
-      const basePrice  = k.groesse === "gross" ? 399 : k.groesse === "mittel" ? 299 : 199;
-      const matPrice   = k.material === "Metall" ? 50 : k.material === "Glas" ? 100 : 0;
-      const finishPrice = k.finish === "glänzend" ? 30 : 0;
-      items.unshift({
-        id: "sideboard",
-        menge: k.menge || 1,
-        name: `Sideboard (Größe: ${k.groesse}, Farbe: ${k.farbe}, Material: ${k.material}, Finish: ${k.finish})`,
-        preis: basePrice + matPrice + finishPrice,
-        bild_url: "hero_sideboard.png",
-      });
-    }
+    items.unshift(...konfigs.map(sideboardCartItem));
 
     res.json(items);
   } catch (err) {
@@ -96,11 +125,12 @@ router.put("/:id", async (req, res) => {
 
     const { field, value } = getAuthDetails(req);
 
-    if (req.params.id === "sideboard") {
-      // Update quantity of sideboard in configurations table
+    const sideboardId = parseSideboardItemId(req.params.id);
+    if (sideboardId) {
+      // Update quantity of one sideboard cart position.
       await db.query(
-        `UPDATE configurations SET menge = ? WHERE ${field} = ?`,
-        [menge, value]
+        `UPDATE configurations SET menge = ? WHERE id = ? AND ${field} = ?`,
+        [menge, sideboardId, value]
       );
       return res.json({ erfolg: true });
     }
@@ -121,8 +151,9 @@ router.delete("/:id", async (req, res) => {
   const db = req.app.locals.db;
   try {
     const { field, value } = getAuthDetails(req);
-    if (req.params.id === "sideboard") {
-      await db.query(`DELETE FROM configurations WHERE ${field} = ?`, [value]);
+    const sideboardId = parseSideboardItemId(req.params.id);
+    if (sideboardId) {
+      await db.query(`DELETE FROM configurations WHERE id = ? AND ${field} = ?`, [sideboardId, value]);
     } else {
       await db.query(`DELETE FROM cart_items WHERE accessory_id = ? AND ${field} = ?`, [req.params.id, value]);
     }
@@ -139,6 +170,7 @@ router.delete("/", async (req, res) => {
   try {
     const { field, value } = getAuthDetails(req);
     await db.query(`DELETE FROM cart_items WHERE ${field} = ?`, [value]);
+    await db.query(`DELETE FROM configurations WHERE ${field} = ?`, [value]);
     res.json({ erfolg: true });
   } catch (err) {
     console.error("❌ DELETE /cart:", err);
@@ -154,21 +186,13 @@ router.post("/sideboard", async (req, res) => {
     const config = req.body;
     if (!config || !config.groesse) return res.status(400).json({ fehler: "Konfiguration unvollständig" });
 
-    const { field, value } = getAuthDetails(req);
     const { farbe, groesse, deckel_offen, material, finish, width_cm, height_cm, depth_cm } = config;
 
-    const [existing] = await db.query(`SELECT id FROM configurations WHERE ${field} = ?`, [value]);
-    if (existing.length > 0) {
-      await db.query(
-        `UPDATE configurations SET farbe=?, groesse=?, deckel_offen=?, material=?, finish=?, width_cm=?, height_cm=?, depth_cm=? WHERE ${field}=?`,
-        [farbe, groesse, deckel_offen || false, material || "Holz", finish || "matt", width_cm || 160, height_cm || 80, depth_cm || 40, value]
-      );
-    } else {
-      await db.query(
-        "INSERT INTO configurations (session_id, user_id, farbe, groesse, deckel_offen, material, finish, width_cm, height_cm, depth_cm) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [req.sessionID, req.session.userId || null, farbe, groesse, deckel_offen || false, material || "Holz", finish || "matt", width_cm || 160, height_cm || 80, depth_cm || 40]
-      );
-    }
+    await db.query(
+      "INSERT INTO configurations (session_id, user_id, farbe, groesse, deckel_offen, material, finish, width_cm, height_cm, depth_cm, menge) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
+      [req.sessionID, req.session.userId || null, farbe, groesse, deckel_offen || false, material || "Holz", finish || "matt", width_cm || 160, height_cm || 80, depth_cm || 40]
+    );
+
     res.json({ erfolg: true });
   } catch (err) {
     console.error("❌ POST /cart/sideboard:", err);
@@ -190,7 +214,7 @@ router.post("/checkout", async (req, res) => {
       [value]
     );
     const [konfigs] = await db.query(
-      `SELECT * FROM configurations WHERE ${field} = ? LIMIT 1`,
+      `SELECT * FROM configurations WHERE ${field} = ?`,
       [value]
     );
 
@@ -198,23 +222,19 @@ router.post("/checkout", async (req, res) => {
       return res.status(400).json({ fehler: "Warenkorb ist leer" });
 
     let total = cartItems.reduce((acc, i) => acc + parseFloat(i.unit_price) * i.quantity, 0);
-    let sideboardItem = null;
-
-    if (konfigs.length > 0) {
-      const k = konfigs[0];
-      const basePrice  = k.groesse === "gross" ? 399 : k.groesse === "mittel" ? 299 : 199;
-      const matPrice   = k.material === "Metall" ? 50 : k.material === "Glas" ? 100 : 0;
-      const finalPrice = basePrice + matPrice + (k.finish === "glänzend" ? 30 : 0);
+    const sideboardItems = konfigs.map((k) => {
+      const finalPrice = calculateSideboardPrice(k);
       const quantity = k.menge || 1;
       total += finalPrice * quantity;
-      sideboardItem = {
+
+      return {
         product_type: "sideboard",
         product_name: `Sideboard ${k.farbe}`,
         quantity: quantity,
         unit_price: finalPrice,
         config_snapshot: JSON.stringify(k),
       };
-    }
+    });
 
     const { shipping_address } = req.body;
     const orderNumber = "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
@@ -231,13 +251,13 @@ router.post("/checkout", async (req, res) => {
         [orderId, "accessory", item.product_id, item.product_name, item.quantity, item.unit_price]
       );
     }
-    if (sideboardItem) {
+    for (const sideboardItem of sideboardItems) {
       await db.query(
         "INSERT INTO order_items (order_id, product_type, product_name, quantity, unit_price, config_snapshot) VALUES (?, ?, ?, ?, ?, ?)",
         [orderId, sideboardItem.product_type, sideboardItem.product_name, sideboardItem.quantity, sideboardItem.unit_price, sideboardItem.config_snapshot]
       );
-      await db.query(`DELETE FROM configurations WHERE ${field} = ?`, [value]);
     }
+    await db.query(`DELETE FROM configurations WHERE ${field} = ?`, [value]);
     await db.query(`DELETE FROM cart_items WHERE ${field} = ?`, [value]);
 
     console.log(`✅ Checkout: ${orderNumber} | ${total.toFixed(2)} €`);

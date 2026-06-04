@@ -38,11 +38,14 @@ router.post("/", async (req, res) => {
     const { field, value } = getAuthQueryDetails(req);
     const { farbe, groesse, deckel_offen, material, finish, width_cm, height_cm, depth_cm } = req.body;
 
-    const [existing] = await db.query(`SELECT id FROM configurations WHERE ${field} = ?`, [value]);
+    const [existing] = await db.query(
+      `SELECT id FROM configurations WHERE ${field} = ? ORDER BY aktualisiert_am DESC LIMIT 1`,
+      [value]
+    );
     if (existing.length > 0) {
       await db.query(
-        `UPDATE configurations SET farbe=?, groesse=?, deckel_offen=?, material=?, finish=?, width_cm=?, height_cm=?, depth_cm=? WHERE ${field}=?`,
-        [farbe, groesse, deckel_offen, material || "Holz", finish || "matt", width_cm || 160, height_cm || 80, depth_cm || 40, value]
+        "UPDATE configurations SET farbe=?, groesse=?, deckel_offen=?, material=?, finish=?, width_cm=?, height_cm=?, depth_cm=? WHERE id=?",
+        [farbe, groesse, deckel_offen, material || "Holz", finish || "matt", width_cm || 160, height_cm || 80, depth_cm || 40, existing[0].id]
       );
     } else {
       await db.query(
@@ -107,12 +110,15 @@ router.post("/saved/:id/load", requireAuth, async (req, res) => {
 
     const snap = boards[0].config_snapshot;
     const { field, value } = getAuthQueryDetails(req);
-    const [vorhandene] = await db.query(`SELECT id FROM configurations WHERE ${field} = ?`, [value]);
+    const [vorhandene] = await db.query(
+      `SELECT id FROM configurations WHERE ${field} = ? ORDER BY aktualisiert_am DESC LIMIT 1`,
+      [value]
+    );
 
     if (vorhandene.length > 0) {
       await db.query(
-        `UPDATE configurations SET farbe=?, groesse=?, deckel_offen=?, material=?, finish=?, width_cm=?, height_cm=?, depth_cm=? WHERE ${field}=?`,
-        [snap.farbe, snap.groesse, snap.deckel_offen, snap.material, snap.finish, snap.width_cm, snap.height_cm, snap.depth_cm, value]
+        "UPDATE configurations SET farbe=?, groesse=?, deckel_offen=?, material=?, finish=?, width_cm=?, height_cm=?, depth_cm=? WHERE id=?",
+        [snap.farbe, snap.groesse, snap.deckel_offen, snap.material, snap.finish, snap.width_cm, snap.height_cm, snap.depth_cm, vorhandene[0].id]
       );
     } else {
       await db.query(
