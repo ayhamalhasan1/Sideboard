@@ -1,12 +1,24 @@
-// Shopping Cart Service — MySQL-based cart (Shopping Cart Cache via SQL API)
-// cart_items table stores accessories; configurations table stores sideboard config.
+// Shopping Cart Service — Redis-backed cart
+// Accessories:        Redis Hash  cart:{field}:{value}:acc  { accessory_id → menge }
+// Sideboard configs:  Redis String cart:{field}:{value}:sb   JSON array
+// Sessions:           Redis (connect-redis, managed by server.js)
+// MySQL:              accessories lookup (name/price) + order persistence only
 
 const express = require("express");
 const router = express.Router();
 
+const CART_TTL = 60 * 60 * 24 * 7; // 7 days in seconds
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function getAuthDetails(req) {
-  if (req.session.userId) return { field: "user_id", value: req.session.userId };
+  if (req.session.userId) return { field: "user_id", value: String(req.session.userId) };
   return { field: "session_id", value: req.sessionID };
+}
+
+function cartKeys(field, value) {
+  const base = `cart:${field}:${value}`;
+  return { acc: `${base}:acc`, sb: `${base}:sb` };
 }
 
 function parseSideboardItemId(id) {
@@ -28,7 +40,7 @@ function sideboardImageName(config) {
   const finish = String(config.finish || "matt").toLowerCase();
   const isGlossy = finish !== "matt";
 
-  let surface = "weiss-matt";
+  let surface;
   if (color === "eiche" || color === "holzoptik") {
     surface = "holzoptik";
   } else if (color === "schwarz") {
@@ -36,7 +48,6 @@ function sideboardImageName(config) {
   } else {
     surface = isGlossy ? "weiss-hochglanz" : "weiss-matt";
   }
-
   return `${surface}-${width}.jpg`;
 }
 
@@ -50,31 +61,48 @@ function sideboardCartItem(config) {
   };
 }
 
+// Read sideboard array from Redis (returns [])
+async function getSideboards(redis, sbKey) {
+  const raw = await redis.get(sbKey);
+  return raw ? JSON.parse(raw) : [];
+}
+
+// Write sideboard array back to Redis with TTL
+async function setSideboards(redis, sbKey, sideboards) {
+  await redis.set(sbKey, JSON.stringify(sideboards));
+  await redis.expire(sbKey, CART_TTL);
+}
+
 // ─── GET /api/cart ────────────────────────────────────────────────────────────
 router.get("/", async (req, res) => {
-  const db = req.app.locals.db;
+  const { db, redis } = req.app.locals;
   try {
     const { field, value } = getAuthDetails(req);
+    const { acc: accKey, sb: sbKey } = cartKeys(field, value);
 
-    // Accessories from cart_items (Shopping Cart Cache — SQL)
-    // Return a.id (accessory primary key) so frontend DELETE/PUT calls work correctly
-    const [items] = await db.query(
-      `SELECT a.id, ci.menge, a.name, a.preis, a.bild_url
-       FROM cart_items ci
-       JOIN accessories a ON ci.accessory_id = a.id
-       WHERE ci.${field} = ?`,
-      [value]
-    );
+    // 1. Accessories from Redis hash
+    const accHash = await redis.hGetAll(accKey);
+    let items = [];
+    if (Object.keys(accHash).length > 0) {
+      const ids = Object.keys(accHash);
+      const placeholders = ids.map(() => "?").join(",");
+      const [rows] = await db.query(
+        `SELECT id, name, preis, bild_url FROM accessories WHERE id IN (${placeholders})`,
+        ids
+      );
+      items = rows.map((a) => ({
+        id: a.id,
+        menge: parseInt(accHash[String(a.id)], 10),
+        name: a.name,
+        preis: a.preis,
+        bild_url: a.bild_url,
+      }));
+    }
 
-    // Sideboard config from configurations table
-    const [konfigs] = await db.query(
-      `SELECT * FROM configurations WHERE ${field} = ? ORDER BY aktualisiert_am DESC`,
-      [value]
-    );
+    // 2. Sideboard configs from Redis string
+    const sideboards = await getSideboards(redis, sbKey);
 
-    items.unshift(...konfigs.map(sideboardCartItem));
-
-    res.json(items);
+    res.json([...sideboards.map(sideboardCartItem), ...items]);
   } catch (err) {
     console.error("❌ GET /cart:", err);
     res.status(500).json({ fehler: "Warenkorb konnte nicht geladen werden" });
@@ -83,12 +111,12 @@ router.get("/", async (req, res) => {
 
 // ─── POST /api/cart ───────────────────────────────────────────────────────────
 router.post("/", async (req, res) => {
-  const db = req.app.locals.db;
+  const { db, redis } = req.app.locals;
   try {
     const { accessory_id } = req.body;
     if (!accessory_id) return res.status(400).json({ fehler: "accessory_id fehlt" });
 
-    // Validate accessory exists
+    // Validate accessory exists in MySQL catalog
     const [[acc]] = await db.query(
       "SELECT id FROM accessories WHERE id = ? AND is_active = TRUE",
       [accessory_id]
@@ -96,19 +124,12 @@ router.post("/", async (req, res) => {
     if (!acc) return res.status(404).json({ fehler: "Artikel nicht gefunden" });
 
     const { field, value } = getAuthDetails(req);
-    const [existing] = await db.query(
-      `SELECT id FROM cart_items WHERE ${field} = ? AND accessory_id = ?`,
-      [value, accessory_id]
-    );
+    const { acc: accKey } = cartKeys(field, value);
 
-    if (existing.length > 0) {
-      await db.query("UPDATE cart_items SET menge = menge + 1 WHERE id = ?", [existing[0].id]);
-    } else {
-      await db.query(
-        "INSERT INTO cart_items (session_id, user_id, accessory_id, menge) VALUES (?, ?, ?, 1)",
-        [req.sessionID, req.session.userId || null, accessory_id]
-      );
-    }
+    // HINCRBY atomically increments (or creates with value 1)
+    await redis.hIncrBy(accKey, String(accessory_id), 1);
+    await redis.expire(accKey, CART_TTL);
+
     res.json({ erfolg: true });
   } catch (err) {
     console.error("❌ POST /cart:", err);
@@ -118,27 +139,28 @@ router.post("/", async (req, res) => {
 
 // ─── PUT /api/cart/:id ────────────────────────────────────────────────────────
 router.put("/:id", async (req, res) => {
-  const db = req.app.locals.db;
+  const { redis } = req.app.locals;
   try {
-    const { menge } = req.body;
+    const menge = parseInt(req.body.menge, 10);
     if (!menge || menge < 1) return res.status(400).json({ fehler: "Menge muss mindestens 1 sein" });
 
     const { field, value } = getAuthDetails(req);
+    const { acc: accKey, sb: sbKey } = cartKeys(field, value);
 
     const sideboardId = parseSideboardItemId(req.params.id);
     if (sideboardId) {
-      // Update quantity of one sideboard cart position.
-      await db.query(
-        `UPDATE configurations SET menge = ? WHERE id = ? AND ${field} = ?`,
-        [menge, sideboardId, value]
-      );
+      const sideboards = await getSideboards(redis, sbKey);
+      const idx = sideboards.findIndex((s) => s.id === sideboardId);
+      if (idx !== -1) {
+        sideboards[idx].menge = menge;
+        await setSideboards(redis, sbKey, sideboards);
+      }
       return res.json({ erfolg: true });
     }
 
-    await db.query(
-      `UPDATE cart_items SET menge = ? WHERE accessory_id = ? AND ${field} = ?`,
-      [menge, req.params.id, value]
-    );
+    // Accessory: set exact quantity in hash
+    await redis.hSet(accKey, String(req.params.id), menge);
+    await redis.expire(accKey, CART_TTL);
     res.json({ erfolg: true });
   } catch (err) {
     console.error("❌ PUT /cart/:id:", err);
@@ -148,15 +170,19 @@ router.put("/:id", async (req, res) => {
 
 // ─── DELETE /api/cart/:id ─────────────────────────────────────────────────────
 router.delete("/:id", async (req, res) => {
-  const db = req.app.locals.db;
+  const { redis } = req.app.locals;
   try {
     const { field, value } = getAuthDetails(req);
+    const { acc: accKey, sb: sbKey } = cartKeys(field, value);
+
     const sideboardId = parseSideboardItemId(req.params.id);
     if (sideboardId) {
-      await db.query(`DELETE FROM configurations WHERE id = ? AND ${field} = ?`, [sideboardId, value]);
-    } else {
-      await db.query(`DELETE FROM cart_items WHERE accessory_id = ? AND ${field} = ?`, [req.params.id, value]);
+      const sideboards = await getSideboards(redis, sbKey);
+      await setSideboards(redis, sbKey, sideboards.filter((s) => s.id !== sideboardId));
+      return res.json({ erfolg: true });
     }
+
+    await redis.hDel(accKey, String(req.params.id));
     res.json({ erfolg: true });
   } catch (err) {
     console.error("❌ DELETE /cart/:id:", err);
@@ -166,11 +192,11 @@ router.delete("/:id", async (req, res) => {
 
 // ─── DELETE /api/cart ─────────────────────────────────────────────────────────
 router.delete("/", async (req, res) => {
-  const db = req.app.locals.db;
+  const { redis } = req.app.locals;
   try {
     const { field, value } = getAuthDetails(req);
-    await db.query(`DELETE FROM cart_items WHERE ${field} = ?`, [value]);
-    await db.query(`DELETE FROM configurations WHERE ${field} = ?`, [value]);
+    const { acc: accKey, sb: sbKey } = cartKeys(field, value);
+    await redis.del(accKey, sbKey);
     res.json({ erfolg: true });
   } catch (err) {
     console.error("❌ DELETE /cart:", err);
@@ -179,19 +205,35 @@ router.delete("/", async (req, res) => {
 });
 
 // ─── POST /api/cart/sideboard ─────────────────────────────────────────────────
-// Saves sideboard configuration to configurations table (Shopping Cart Cache — SQL)
 router.post("/sideboard", async (req, res) => {
-  const db = req.app.locals.db;
+  const { redis } = req.app.locals;
   try {
     const config = req.body;
     if (!config || !config.groesse) return res.status(400).json({ fehler: "Konfiguration unvollständig" });
 
+    const { field, value } = getAuthDetails(req);
+    const { sb: sbKey } = cartKeys(field, value);
+
     const { farbe, groesse, deckel_offen, material, finish, width_cm, height_cm, depth_cm } = config;
 
-    await db.query(
-      "INSERT INTO configurations (session_id, user_id, farbe, groesse, deckel_offen, material, finish, width_cm, height_cm, depth_cm, menge) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
-      [req.sessionID, req.session.userId || null, farbe, groesse, deckel_offen || false, material || "Holz", finish || "matt", width_cm || 160, height_cm || 80, depth_cm || 40]
-    );
+    const sideboards = await getSideboards(redis, sbKey);
+
+    // Each configuration gets a unique numeric ID (used by frontend as sideboard-{id})
+    const newConfig = {
+      id: Date.now(),
+      farbe:        farbe       || "weiss",
+      groesse:      groesse,
+      deckel_offen: deckel_offen || false,
+      material:     material    || "Holz",
+      finish:       finish      || "matt",
+      width_cm:     width_cm    || 160,
+      height_cm:    height_cm   || 80,
+      depth_cm:     depth_cm    || 40,
+      menge:        config.menge || 1,
+    };
+
+    sideboards.push(newConfig);
+    await setSideboards(redis, sbKey, sideboards);
 
     res.json({ erfolg: true });
   } catch (err) {
@@ -202,40 +244,50 @@ router.post("/sideboard", async (req, res) => {
 
 // ─── POST /api/cart/checkout ──────────────────────────────────────────────────
 router.post("/checkout", async (req, res) => {
-  const db = req.app.locals.db;
+  const { db, redis } = req.app.locals;
   try {
     const { field, value } = getAuthDetails(req);
+    const { acc: accKey, sb: sbKey } = cartKeys(field, value);
 
-    const [cartItems] = await db.query(
-      `SELECT ci.menge AS quantity, a.id AS product_id, a.name AS product_name, a.preis AS unit_price
-       FROM cart_items ci
-       JOIN accessories a ON ci.accessory_id = a.id
-       WHERE ci.${field} = ?`,
-      [value]
-    );
-    const [konfigs] = await db.query(
-      `SELECT * FROM configurations WHERE ${field} = ?`,
-      [value]
-    );
+    // 1. Accessories from Redis → details from MySQL
+    const accHash = await redis.hGetAll(accKey);
+    let cartItems = [];
+    if (Object.keys(accHash).length > 0) {
+      const ids = Object.keys(accHash);
+      const placeholders = ids.map(() => "?").join(",");
+      const [rows] = await db.query(
+        `SELECT id, name, preis FROM accessories WHERE id IN (${placeholders})`,
+        ids
+      );
+      cartItems = rows.map((a) => ({
+        product_id:   a.id,
+        product_name: a.name,
+        unit_price:   parseFloat(a.preis),
+        quantity:     parseInt(accHash[String(a.id)], 10),
+      }));
+    }
 
-    if (cartItems.length === 0 && konfigs.length === 0)
+    // 2. Sideboard configs from Redis
+    const sideboards = await getSideboards(redis, sbKey);
+
+    if (cartItems.length === 0 && sideboards.length === 0)
       return res.status(400).json({ fehler: "Warenkorb ist leer" });
 
-    let total = cartItems.reduce((acc, i) => acc + parseFloat(i.unit_price) * i.quantity, 0);
-    const sideboardItems = konfigs.map((k) => {
+    // 3. Calculate total
+    let total = cartItems.reduce((acc, i) => acc + i.unit_price * i.quantity, 0);
+    const sideboardItems = sideboards.map((k) => {
       const finalPrice = calculateSideboardPrice(k);
       const quantity = k.menge || 1;
       total += finalPrice * quantity;
-
       return {
-        product_type: "sideboard",
-        product_name: `Sideboard ${k.farbe}`,
-        quantity: quantity,
-        unit_price: finalPrice,
+        product_name:    `Sideboard ${k.farbe}`,
+        quantity,
+        unit_price:      finalPrice,
         config_snapshot: JSON.stringify(k),
       };
     });
 
+    // 4. Persist order in MySQL
     const { shipping_address } = req.body;
     const orderNumber = "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
 
@@ -247,18 +299,19 @@ router.post("/checkout", async (req, res) => {
 
     for (const item of cartItems) {
       await db.query(
-        "INSERT INTO order_items (order_id, product_type, product_id, product_name, quantity, unit_price) VALUES (?, ?, ?, ?, ?, ?)",
-        [orderId, "accessory", item.product_id, item.product_name, item.quantity, item.unit_price]
+        "INSERT INTO order_items (order_id, product_type, product_id, product_name, quantity, unit_price) VALUES (?, 'accessory', ?, ?, ?, ?)",
+        [orderId, item.product_id, item.product_name, item.quantity, item.unit_price]
       );
     }
-    for (const sideboardItem of sideboardItems) {
+    for (const item of sideboardItems) {
       await db.query(
-        "INSERT INTO order_items (order_id, product_type, product_name, quantity, unit_price, config_snapshot) VALUES (?, ?, ?, ?, ?, ?)",
-        [orderId, sideboardItem.product_type, sideboardItem.product_name, sideboardItem.quantity, sideboardItem.unit_price, sideboardItem.config_snapshot]
+        "INSERT INTO order_items (order_id, product_type, product_name, quantity, unit_price, config_snapshot) VALUES (?, 'sideboard', ?, ?, ?, ?)",
+        [orderId, item.product_name, item.quantity, item.unit_price, item.config_snapshot]
       );
     }
-    await db.query(`DELETE FROM configurations WHERE ${field} = ?`, [value]);
-    await db.query(`DELETE FROM cart_items WHERE ${field} = ?`, [value]);
+
+    // 5. Clear cart from Redis
+    await redis.del(accKey, sbKey);
 
     console.log(`✅ Checkout: ${orderNumber} | ${total.toFixed(2)} €`);
     res.json({ erfolg: true, order_id: orderId, order_number: orderNumber, total });

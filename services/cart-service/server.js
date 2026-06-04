@@ -1,10 +1,13 @@
 // Shopping Cart Microservice
-// Database: Shopping Cart Cache → MySQL (via SQL API)
+// Cart data (accessories + sideboard configs): Redis
+// Sessions: Redis (connect-redis)
+// MySQL: only for accessories lookup and order persistence
 
 require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
-const MySQLStore = require("express-mysql-session")(session);
+const { RedisStore } = require("connect-redis");
+const { createClient } = require("redis");
 const { createPool } = require("./db/mysql");
 
 const app = express();
@@ -13,22 +16,28 @@ const PORT = process.env.PORT || 3002;
 app.use(express.json());
 
 async function start() {
-  // ── MySQL: Shopping Cart Cache (SQL API) ─────────────────────────────────────
+  // ── MySQL: accessories catalog + orders ──────────────────────────────────────
   const db = await createPool();
   app.locals.db = db;
 
-  // ── Session via MySQL Store ──────────────────────────────────────────────────
-  const sessionStore = new MySQLStore({
-    host:     process.env.DB_HOST     || "localhost",
-    port:     parseInt(process.env.DB_PORT) || 3306,
-    user:     process.env.DB_USER     || "root",
-    password: process.env.DB_PASSWORD || "sideboard123",
-    database: process.env.DB_NAME     || "sideboard_db",
+  // ── Redis: cart data + sessions ──────────────────────────────────────────────
+  const redisClient = createClient({
+    socket: {
+      host: process.env.REDIS_HOST || "localhost",
+      port: parseInt(process.env.REDIS_PORT) || 6379,
+    },
   });
 
+  redisClient.on("error", (err) => console.error("❌ Redis error:", err));
+  await redisClient.connect();
+  console.log("✅ Redis verbunden (cart-service)");
+
+  app.locals.redis = redisClient;
+
+  // ── Session store: Redis ─────────────────────────────────────────────────────
   app.use(
     session({
-      store: sessionStore,
+      store: new RedisStore({ client: redisClient }),
       secret: process.env.SESSION_SECRET || "mein-geheimes-session-secret",
       resave: false,
       saveUninitialized: true,
@@ -36,7 +45,7 @@ async function start() {
     })
   );
 
-  // ── Routes ──────────────────────────────────────────────────────────────────
+  // ── Routes ───────────────────────────────────────────────────────────────────
   app.use("/api/cart", require("./routes/cart"));
   app.get("/api/health", (req, res) => res.json({ status: "ok", service: "cart-service" }));
 
