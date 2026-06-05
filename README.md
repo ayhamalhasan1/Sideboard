@@ -79,8 +79,8 @@ Cloud-native Webanwendung zum individuellen Konfigurieren und Kaufen eines Sideb
 | **API Gateway** | Node.js + Express | Routing zu Microservices |
 | **Load Balancer** | Nginx (6 Instanzen) | Je ein LB pro Microservice |
 | **Microservices** | Node.js + Express (5 Services) | Fachliche Trennung |
-| **Datenbank** | MySQL 8.0 | Alle persistenten Daten |
-| **Sessions** | express-mysql-session | Geteilter Session-Store (MySQL) |
+| **Datenbank** | MySQL 8.0 | Persistente Daten (Katalog, Bestellungen, Community) |
+| **Cache / Sessions** | Redis 7 | Geteilter Session-Store + Warenkorb-Datenspeicher |
 | **Bildspeicher** | MinIO (S3-kompatibel) | Binäre Bild-/Mediendateien |
 | **KI** | Google Gemini 1.5 Flash | Einrichtungsberatung |
 | **Container** | Docker + Docker Compose | Orchestrierung |
@@ -243,7 +243,10 @@ docker compose down -v
 
 ### Shopping Cart Service (`cart-service`)
 - **Port:** 3002
-- **Datenbank:** Shopping Cart Cache → MySQL (`cart_items`-Tabelle, via SQL API)
+- **Datenspeicher:**
+  - Warenkorb-Daten → **Redis** (Zubehör als Hash `cart:{field}:{value}:acc`, Sideboards als JSON-String `cart:{field}:{value}:sb`)
+  - Bestellungen → MySQL (`orders`- und `order_items`-Tabellen)
+  - Zubehör-Katalog → MySQL (`accessories`-Tabelle, nur Lesen)
 - **Routen:** `/api/cart`, `/api/cart/sideboard`, `/api/cart/checkout`
 
 ### Sideboard Configurator Service (`configurator-service`)
@@ -341,11 +344,12 @@ GET /health            → ai-cache-service
 
 Alle Daten liegen in einer gemeinsamen MySQL-Instanz (`sideboard_db`). Die Tabellen sind logisch den jeweiligen Microservices zugeordnet.
 
+**MySQL-Tabellen (`sideboard_db`):**
+
 | Tabelle | Microservice | Beschreibung |
 |---|---|---|
 | `accessories` | shop-service | Zubehör-Katalog |
 | `reviews` | shop-service | Produktbewertungen (1–5 Sterne) |
-| `cart_items` | cart-service | Warenkorb-Einträge pro Session |
 | `configurations` | configurator-service | Aktive Sideboard-Konfigurationen |
 | `saved_sideboards` | configurator-service | Gespeicherte Favoriten (auth) |
 | `community_designs` | community-feature-service | Benutzer-Entwürfe für Community |
@@ -353,7 +357,16 @@ Alle Daten liegen in einer gemeinsamen MySQL-Instanz (`sideboard_db`). Die Tabel
 | `order_items` | cart-service | Bestellpositionen |
 | `users` | — | Benutzerkonten |
 | `addresses` | — | Lieferadressen |
-| `ai_cache` | ai-service | Cache für Gemini-Antworten (TTL: 1 Tag) |
+
+**Redis-Keys:**
+
+| Key-Muster | Typ | Beschreibung |
+|---|---|---|
+| `sess:{sessionId}` | String (JSON) | Geteilter Session-Store (alle Services) |
+| `cart:session_id:{id}:acc` | Hash | Zubehör im Warenkorb (field=accessory_id, value=Menge) |
+| `cart:session_id:{id}:sb` | String (JSON) | Sideboard-Konfigurationen im Warenkorb |
+| `cart:user_id:{id}:acc` | Hash | Zubehör für eingeloggte Nutzer |
+| `cart:user_id:{id}:sb` | String (JSON) | Sideboards für eingeloggte Nutzer |
 
 ### Preisberechnung Sideboard
 
@@ -397,7 +410,9 @@ Jeder Service hat eine eigene `.env.example`-Datei mit allen benötigten Variabl
 | `DB_USER` | MySQL-Benutzer |
 | `DB_PASSWORD` | MySQL-Passwort |
 | `DB_NAME` | Datenbankname (`sideboard_db`) |
-| `SESSION_SECRET` | Muss überall gleich sein |
+| `REDIS_HOST` | Redis-Hostname (im Container: `redis`) |
+| `REDIS_PORT` | Redis-Port (Standard: `6379`) |
+| `SESSION_SECRET` | **Muss in ALLEN Services identisch sein** — gemeinsamer Redis-Session-Store |
 | `GEMINI_API_KEY` | Nur in `ai-service` |
 | `MINIO_HOST` | Nur in `configurator-service` und `community-feature-service` |
 
@@ -415,7 +430,7 @@ docker compose up --build --scale cart-service=3
 
 Der `lb-cart`-Container leitet Anfragen dann reihum an alle drei Instanzen weiter.
 
-> **Hinweis:** Sessions liegen in MySQL — alle Instanzen eines Services teilen denselben Session-Store, kein Sticky-Session-Problem.
+> **Hinweis:** Sessions und Warenkorb-Daten liegen in Redis — alle Instanzen eines Services teilen denselben Store, kein Sticky-Session-Problem.
 
 ---
 
