@@ -54,18 +54,23 @@ Cloud-native Webanwendung zum individuellen Konfigurieren und Kaufen eines Sideb
 ┌──────▼──┐ ┌────▼────┐ ┌───▼───┐ ┌───▼─────────┐ ┌───▼────────────┐
 │  LB     │ │  LB     │ │  LB   │ │     LB      │ │      LB        │
 │  Shop   │ │  Cart   │ │ Conf. │ │     AI      │ │   Community    │
-└──────┬──┘ └────┬────┘ └───┬───┘ └───┬────────┘ └───┬───────────┘
-       │          │          │          │              │
-┌──────▼──┐ ┌────▼────┐ ┌───▼───┐ ┌───▼──────────┐ ┌──▼──────────────┐
-│  Shop   │ │  Cart   │ │Config.│ │     AI       │ │   Community     │
-│ Service │ │ Service │ │Service│ │ Recommend.  │ │ Feature Service │
-│         │ │         │ │       │ │   Service   │ │       +         │
-│ MySQL   │ │ MySQL   │ │ MySQL │ │     │       │ │   MinIO (Media) │
-│ (Prod.) │ │ (Cart)  │ │+ MinIO│ │ MySQL ▼     │ │       +         │
-│ MySQL   │ │         │ │       │ │ AI Cache    │ │      MySQL      │
-│ (Rev.)  │ │         │ │       │ │ Service     │ │                 │
-│         │ │         │ │       │ │(REST API)   │ │                 │
-└─────────┘ └─────────┘ └───────┘ └─────────────┘ └─────────────────┘
+└──────┬──┘ └────┬────┘ └───┬───┘ └───┬─────────┘ └───┬────────────┘
+       │          │          │          │               │
+┌──────▼──┐ ┌────▼────┐ ┌───▼───┐ ┌───▼─────────┐ ┌───▼────────────┐
+│  Shop   │ │  Cart   │ │Config.│ │     AI      │ │   Community    │
+│ Service │ │ Service │ │Service│ │ Recommend.  │ │ Feature Service│
+│         │ │         │ │       │ │   Service   │ │                │
+│  MySQL  │ │  Redis  │ │ MySQL │ │    MySQL    │ │ MySQL + MinIO  │
+│ (Prod.) │ │ (Korb)  │ │+ MinIO│ │  (Gemini)  │ │                │
+│  MySQL  │ │  MySQL  │ │       │ │             │ │                │
+│ (Rev.)  │ │(Orders) │ │       │ │             │ │                │
+└─────────┘ └────┬────┘ └───────┘ └─────────────┘ └────────────────┘
+                 │
+    ┌────────────▼─────────────┐
+    │          Redis           │
+    │  Sessions (alle Svcs.)   │
+    │  Warenkorb-Daten (Cart)  │
+    └──────────────────────────┘
 ```
 
 ---
