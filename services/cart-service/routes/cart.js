@@ -196,7 +196,7 @@ router.delete("/", async (req, res) => {
   try {
     const { field, value } = getAuthDetails(req);
     const { acc: accKey, sb: sbKey } = cartKeys(field, value);
-    await redis.del(accKey, sbKey);
+    await redis.del([accKey, sbKey]);
     res.json({ erfolg: true });
   } catch (err) {
     console.error("❌ DELETE /cart:", err);
@@ -311,7 +311,7 @@ router.post("/checkout", async (req, res) => {
     }
 
     // 5. Clear cart from Redis
-    await redis.del(accKey, sbKey);
+    await redis.del([accKey, sbKey]);
 
     console.log(`✅ Checkout: ${orderNumber} | ${total.toFixed(2)} €`);
     res.json({ erfolg: true, order_id: orderId, order_number: orderNumber, total });

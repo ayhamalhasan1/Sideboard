@@ -128,7 +128,8 @@
         const data = await res.json();
 
         if (res.ok) {
-          // Zeige Erfolgsmeldung direkt auf der Seite
+          // Badge und Cart-State leeren
+          updateCartBadge();
           document.querySelector('.checkout-form').innerHTML = `
             <div style="text-align: center; padding: 2rem 0;">
               <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>

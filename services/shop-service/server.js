@@ -4,7 +4,8 @@
 require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
-const MySQLStore = require("express-mysql-session")(session);
+const RedisStore = require("connect-redis").default;
+const { createClient } = require("redis");
 const { createPool } = require("./db/mysql");
 
 const app = express();
@@ -17,18 +18,20 @@ async function start() {
   const db = await createPool();
   app.locals.db = db;
 
-  // ── Session via MySQL Store ──────────────────────────────────────────────────
-  const sessionStore = new MySQLStore({
-    host:     process.env.DB_HOST     || "localhost",
-    port:     parseInt(process.env.DB_PORT) || 3306,
-    user:     process.env.DB_USER     || "root",
-    password: process.env.DB_PASSWORD || "sideboard123",
-    database: process.env.DB_NAME     || "sideboard_db",
+  // ── Redis: shared session store ──────────────────────────────────────────────
+  const redisClient = createClient({
+    socket: {
+      host: process.env.REDIS_HOST || "localhost",
+      port: parseInt(process.env.REDIS_PORT) || 6379,
+    },
   });
+  redisClient.on("error", (err) => console.error("❌ Redis error:", err));
+  await redisClient.connect();
+  console.log("✅ Redis verbunden (shop-service)");
 
   app.use(
     session({
-      store: sessionStore,
+      store: new RedisStore({ client: redisClient }),
       secret: process.env.SESSION_SECRET || "mein-geheimes-session-secret",
       resave: false,
       saveUninitialized: true,
