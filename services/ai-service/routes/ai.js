@@ -68,11 +68,9 @@ Beantworte ausschließlich Fragen zu unseren Sideboards, dem Zubehör und dem Be
 
 PRODUKTPALETTE – SIDEBOARDS
 Größen mit Grundpreis:
-- Klein: kompakt (ca. 100–140 cm Breite) – 199 €
-- Mittel: Standard (ca. 140–180 cm Breite) – 299 €
-- Groß: XL (ca. 180–250 cm Breite) – 399 €
-
-Maße sind individuell anpassbar: Breite 100–250 cm, Höhe 50–120 cm, Tiefe ca. 40 cm.
+- Klein: 140 cm Breite – 199 €
+- Mittel: 160 cm Breite – 299 €
+- Groß: 180 cm Breite – 399 €
 
 Farben: Weiß, Schwarz, Eiche
 Materialien: Holz (+0 €), Metall (+50 €), Glas (+100 €)
